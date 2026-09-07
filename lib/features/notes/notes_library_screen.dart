@@ -31,6 +31,7 @@ class NotesLibraryScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Notes Library')),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null, // avoid Hero-tag collisions with FABs on other tabs kept alive in the IndexedStack
         onPressed: () => showNoteEditSheet(context),
         icon: const Icon(Icons.add),
         label: const Text('Add note'),

@@ -61,6 +61,7 @@ class VerseListScreen extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null, // avoid Hero-tag collisions with FABs on other tabs kept alive in the IndexedStack
         onPressed: () => showVerseEntrySheet(context, bookId: bookId, chapter: chapter),
         icon: const Icon(Icons.add),
         label: const Text('Add verse(s)'),

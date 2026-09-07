@@ -19,6 +19,7 @@ class TalkDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Talk outline')),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null, // avoid Hero-tag collisions with FABs on other tabs kept alive in the IndexedStack
         onPressed: () => _addPointDialog(context, ref),
         icon: const Icon(Icons.add),
         label: const Text('Add point'),

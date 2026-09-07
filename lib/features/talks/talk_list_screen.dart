@@ -20,6 +20,7 @@ class TalkListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Public Talks')),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null, // avoid Hero-tag collisions with FABs on other tabs kept alive in the IndexedStack
         onPressed: () => _showNewTalkDialog(context, ref),
         icon: const Icon(Icons.add),
         label: const Text('New talk'),

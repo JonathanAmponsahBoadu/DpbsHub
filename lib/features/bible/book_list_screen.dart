@@ -38,14 +38,18 @@ class BookListScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
               _SectionHeader(
-                  title: 'Hebrew-Aramaic Scriptures', count: hebrew.length, color: AppTheme.emerald),
+                  title: 'Hebrew-Aramaic Scriptures',
+                  count: hebrew.length,
+                  color: AppTheme.testamentHebrew),
               const SizedBox(height: 10),
-              _BookGrid(books: hebrew, lang: lang, dotColor: AppTheme.emerald),
+              _BookGrid(books: hebrew, lang: lang, dotColor: AppTheme.testamentHebrew),
               const SizedBox(height: 24),
               _SectionHeader(
-                  title: 'Christian Greek Scriptures', count: greek.length, color: AppTheme.sky),
+                  title: 'Christian Greek Scriptures',
+                  count: greek.length,
+                  color: AppTheme.testamentGreek),
               const SizedBox(height: 10),
-              _BookGrid(books: greek, lang: lang, dotColor: AppTheme.sky),
+              _BookGrid(books: greek, lang: lang, dotColor: AppTheme.testamentGreek),
             ],
           );
         },
