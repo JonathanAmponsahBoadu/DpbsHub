@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+import '../core/ai/ai_service.dart';
 import '../core/notifications/notification_service.dart';
+import '../core/security/api_key_vault.dart';
 import 'assets_source/bible_structure.dart';
 import 'local/database.dart';
 import 'repositories/bible_repository.dart';
@@ -32,8 +34,9 @@ final notesRepositoryProvider =
 final talksRepositoryProvider =
     Provider((ref) => TalksRepository(ref.watch(databaseProvider)));
 
-final quizRepositoryProvider =
-    Provider((ref) => QuizRepository(ref.watch(databaseProvider)));
+final quizRepositoryProvider = Provider(
+  (ref) => QuizRepository(ref.watch(databaseProvider), ref.watch(aiServiceProvider)),
+);
 
 final remindersRepositoryProvider =
     Provider((ref) => RemindersRepository(ref.watch(databaseProvider)));
@@ -48,6 +51,10 @@ final reminderSetupProvider = FutureProvider<void>((ref) async {
   await NotificationService.instance.requestPermissions();
   await repo.rescheduleAll();
 });
+
+final apiKeyVaultProvider = Provider((ref) => ApiKeyVault.instance);
+
+final aiServiceProvider = Provider((ref) => AiService(ref.watch(apiKeyVaultProvider)));
 
 /// 'en' or 'tw' — the language you're currently studying/adding entries in.
 final studyLanguageProvider = StateProvider<String>((ref) => 'en');

@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/ai/ai_provider.dart';
+import '../../core/ai/ai_service.dart';
 import '../local/database.dart';
 
 /// One question presented in a quiz session, with everything needed to render
@@ -13,6 +15,9 @@ class QuizQuestion {
     required this.prompt,
     required this.correctAnswer,
     this.choices = const [],
+    this.generatedBy,
+    this.needsAiGrading = false,
+    this.gradingNoteText,
   });
   final String prompt;
   final String correctAnswer;
@@ -20,20 +25,34 @@ class QuizQuestion {
   /// Multiple-choice distractors + correct answer, pre-shuffled. Empty for
   /// free-text questions (e.g. text recall), where grading is fuzzy-matched.
   final List<String> choices;
+
+  /// Which AI provider generated this question — null for questions built
+  /// purely from your own logged data (reference/text/talk recall). Shown
+  /// as a "Generated & graded by X" chip during the quiz.
+  final AiProvider? generatedBy;
+
+  /// True for AI-generated "lesson" questions: grading is a second AI call
+  /// judging your free-text answer against [gradingNoteText], not a local
+  /// string match.
+  final bool needsAiGrading;
+  final String? gradingNoteText;
 }
 
 enum QuizScopeType { book, chapter, verseRange, tag, talk }
 
-enum QuizType { referenceRecall, textRecall, talkRecall }
+enum QuizType { referenceRecall, textRecall, talkRecall, lesson, trivia }
 
 class QuizRepository {
-  QuizRepository(this._db);
+  QuizRepository(this._db, this._ai);
   final AppDatabase _db;
+  final AiService _ai;
   static const _uuid = Uuid();
   final _random = Random();
 
   /// Builds a question set from your own saved data for the chosen scope+type.
-  /// Returns an empty list if you haven't logged enough material yet.
+  /// Returns an empty list if you haven't logged enough material yet. AI-backed
+  /// types (lesson/trivia) throw [AiClientException] (via [AiService]) if no
+  /// provider is configured yet — callers should surface that message.
   Future<List<QuizQuestion>> buildQuiz({
     required QuizScopeType scopeType,
     required QuizType quizType,
@@ -45,6 +64,10 @@ class QuizRepository {
     switch (quizType) {
       case QuizType.talkRecall:
         return _buildTalkRecallQuiz(talkId!);
+      case QuizType.trivia:
+        return _buildTriviaQuiz();
+      case QuizType.lesson:
+        return _buildLessonQuiz(scopeType: scopeType, bookId: bookId, chapter: chapter, tagId: tagId);
       case QuizType.referenceRecall:
       case QuizType.textRecall:
         final entries = await _entriesForScope(
@@ -90,6 +113,31 @@ class QuizRepository {
       query.where((e) => e.chapter.equals(chapter));
     }
     return query.get();
+  }
+
+  /// Notes matching the chosen scope, used as source material for AI-generated
+  /// "lesson" questions — never the scripture text itself, just what you wrote.
+  Future<List<StudyNote>> _notesForScope({
+    required QuizScopeType scopeType,
+    int? bookId,
+    int? chapter,
+    String? tagId,
+  }) async {
+    if (scopeType == QuizScopeType.tag && tagId != null) {
+      final links = await (_db.select(_db.noteTagLinks)..where((l) => l.tagId.equals(tagId))).get();
+      final notes = <StudyNote>[];
+      for (final link in links) {
+        final note =
+            await (_db.select(_db.studyNotes)..where((n) => n.id.equals(link.noteId))).getSingleOrNull();
+        if (note != null) notes.add(note);
+      }
+      return notes;
+    }
+    final entries = await _entriesForScope(scopeType: scopeType, bookId: bookId, chapter: chapter);
+    final entryIds = entries.map((e) => e.id).toSet();
+    if (entryIds.isEmpty) return [];
+    final allNotes = await _db.select(_db.studyNotes).get();
+    return allNotes.where((n) => entryIds.contains(n.studyEntryId)).toList();
   }
 
   Future<List<QuizQuestion>> _buildReferenceRecallQuiz(
@@ -144,6 +192,49 @@ class QuizRepository {
         correctAnswer: e.value.pointText,
       );
     }).toList();
+    return questions;
+  }
+
+  static const _maxAiQuestions = 5;
+
+  Future<List<QuizQuestion>> _buildTriviaQuiz() async {
+    final (provider, client) = await _ai.activeClient();
+    final questions = <QuizQuestion>[];
+    for (var i = 0; i < _maxAiQuestions; i++) {
+      final trivia = await client.generateTrivia();
+      final choices = List<String>.from(trivia.choices)..shuffle(_random);
+      questions.add(QuizQuestion(
+        prompt: trivia.question,
+        correctAnswer: trivia.choices[trivia.correctIndex],
+        choices: choices,
+        generatedBy: provider,
+      ));
+    }
+    return questions;
+  }
+
+  Future<List<QuizQuestion>> _buildLessonQuiz({
+    required QuizScopeType scopeType,
+    int? bookId,
+    int? chapter,
+    String? tagId,
+  }) async {
+    final notes = await _notesForScope(scopeType: scopeType, bookId: bookId, chapter: chapter, tagId: tagId);
+    final withText = notes.where((n) => n.noteText.trim().isNotEmpty).toList()..shuffle(_random);
+    if (withText.isEmpty) return [];
+
+    final (provider, client) = await _ai.activeClient();
+    final questions = <QuizQuestion>[];
+    for (final note in withText.take(_maxAiQuestions)) {
+      final question = await client.generateLessonQuestion(note.noteText);
+      questions.add(QuizQuestion(
+        prompt: question,
+        correctAnswer: note.noteText,
+        needsAiGrading: true,
+        gradingNoteText: note.noteText,
+        generatedBy: provider,
+      ));
+    }
     return questions;
   }
 

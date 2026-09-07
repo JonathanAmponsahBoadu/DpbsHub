@@ -97,10 +97,24 @@ class ActiveQuizNotifier extends Notifier<ActiveQuizState> {
     final question = state.currentQuestion;
     if (question == null || state.sessionId == null) return;
     final repo = ref.read(quizRepositoryProvider);
-    final isCorrect = userAnswer != null &&
-        (question.choices.isNotEmpty
-            ? userAnswer == question.correctAnswer
-            : repo.gradeAnswer(userAnswer, question.correctAnswer));
+
+    bool isCorrect;
+    if (userAnswer == null) {
+      isCorrect = false;
+    } else if (question.needsAiGrading) {
+      // AI-evaluated: a second call judges the free-text answer against the
+      // original note, rather than a local string match.
+      final (_, client) = await ref.read(aiServiceProvider).activeClient();
+      isCorrect = await client.gradeLessonAnswer(
+        noteText: question.gradingNoteText ?? question.correctAnswer,
+        question: question.prompt,
+        userAnswer: userAnswer,
+      );
+    } else if (question.choices.isNotEmpty) {
+      isCorrect = userAnswer == question.correctAnswer;
+    } else {
+      isCorrect = repo.gradeAnswer(userAnswer, question.correctAnswer);
+    }
 
     await repo.recordAttempt(
       sessionId: state.sessionId!,

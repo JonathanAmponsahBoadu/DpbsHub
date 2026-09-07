@@ -10,6 +10,7 @@ import '../../features/quiz/quiz_results_screen.dart';
 import '../../features/quiz/quiz_scope_screen.dart';
 import '../../features/quiz/quiz_session_screen.dart';
 import '../../features/quiz/quiz_type_screen.dart';
+import '../../features/settings/ai_providers_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/talks/talk_detail_screen.dart';
 import '../../features/talks/talk_list_screen.dart';
@@ -84,6 +85,13 @@ final appRouter = GoRouter(
       path: '/settings',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (c, s) => const SettingsScreen(),
+      routes: [
+        GoRoute(
+          path: 'ai-providers',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (c, s) => const AiProvidersScreen(),
+        ),
+      ],
     ),
   ],
 );

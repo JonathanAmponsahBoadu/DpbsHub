@@ -44,3 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .claude
+
+# Local dev-only secrets (AI provider API keys for testing) — never committed.
+# See .env.example for the expected shape. Loaded only in debug builds via
+# --dart-define-from-file=.env to auto-seed the on-device key vault.
+.env

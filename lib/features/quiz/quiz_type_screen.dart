@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/ai/ai_client.dart';
 import '../../data/repositories/quiz_repository.dart';
 import 'quiz_state.dart';
 
@@ -21,7 +22,7 @@ class _QuizTypeScreenState extends ConsumerState<QuizTypeScreen> {
     final quizType = ref.watch(selectedQuizTypeProvider);
     final availableTypes = scopeType == QuizScopeType.talk
         ? [QuizType.talkRecall]
-        : [QuizType.referenceRecall, QuizType.textRecall];
+        : [QuizType.referenceRecall, QuizType.textRecall, QuizType.lesson, QuizType.trivia];
 
     return Scaffold(
       appBar: AppBar(title: const Text('Quiz — choose type')),
@@ -34,7 +35,15 @@ class _QuizTypeScreenState extends ConsumerState<QuizTypeScreen> {
                 value: t,
                 groupValue: quizType,
                 onChanged: (v) => ref.read(selectedQuizTypeProvider.notifier).state = v,
-                title: Text(_title(t)),
+                title: Row(
+                  children: [
+                    Text(_title(t)),
+                    if (t == QuizType.lesson || t == QuizType.trivia) ...[
+                      const SizedBox(width: 8),
+                      const Icon(Icons.smart_toy_outlined, size: 16),
+                    ],
+                  ],
+                ),
                 subtitle: Text(_subtitle(t)),
               ),
             ),
@@ -55,6 +64,8 @@ class _QuizTypeScreenState extends ConsumerState<QuizTypeScreen> {
         QuizType.referenceRecall => 'Where is this from?',
         QuizType.textRecall => 'What does it say?',
         QuizType.talkRecall => 'Recall the talk points',
+        QuizType.lesson => 'What lesson did you learn?',
+        QuizType.trivia => 'Bible characters & facts',
       };
 
   String _subtitle(QuizType t) => switch (t) {
@@ -62,18 +73,31 @@ class _QuizTypeScreenState extends ConsumerState<QuizTypeScreen> {
           'Shown a verse\'s text, name the book/chapter/verse — tests precise reference recall.',
         QuizType.textRecall => 'Shown a reference, recall the verse text you saved.',
         QuizType.talkRecall => 'Recall the outline points you logged for this talk.',
+        QuizType.lesson =>
+          'AI asks a question about your own notes, then judges your free-text answer.',
+        QuizType.trivia => 'AI-generated general trivia — doesn\'t use your saved data.',
       };
 
   Future<void> _start() async {
     setState(() => _starting = true);
-    await ref.read(activeQuizProvider.notifier).start(
-          scopeType: ref.read(selectedScopeTypeProvider)!,
-          quizType: ref.read(selectedQuizTypeProvider)!,
-          bookId: ref.read(selectedBookIdProvider),
-          chapter: ref.read(selectedChapterProvider),
-          tagId: ref.read(selectedTagIdProvider),
-          talkId: ref.read(selectedTalkIdProvider),
-        );
+    try {
+      await ref.read(activeQuizProvider.notifier).start(
+            scopeType: ref.read(selectedScopeTypeProvider)!,
+            quizType: ref.read(selectedQuizTypeProvider)!,
+            bookId: ref.read(selectedBookIdProvider),
+            chapter: ref.read(selectedChapterProvider),
+            tagId: ref.read(selectedTagIdProvider),
+            talkId: ref.read(selectedTalkIdProvider),
+          );
+    } on AiClientException catch (e) {
+      if (!mounted) return;
+      setState(() => _starting = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.message),
+        action: SnackBarAction(label: 'Settings', onPressed: () => context.push('/settings')),
+      ));
+      return;
+    }
     if (!mounted) return;
     setState(() => _starting = false);
     final state = ref.read(activeQuizProvider);

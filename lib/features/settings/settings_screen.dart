@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../data/local/database.dart';
 import '../../data/providers.dart';
@@ -89,8 +90,9 @@ class SettingsScreen extends ConsumerWidget {
               leading: const Icon(Icons.smart_toy_outlined),
               title: const Text('AI providers (Gemini, Groq)'),
               subtitle: const Text(
-                  'Coming soon — biometric-locked key vault, with the active provider always shown during a quiz and switchable here.'),
-              enabled: false,
+                  'Fingerprint/face-locked key vault. Pick which provider generates and grades your AI quiz questions.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/settings/ai-providers'),
             ),
           ),
           const SizedBox(height: 20),
