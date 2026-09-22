@@ -10,6 +10,8 @@ import '../../features/quiz/quiz_results_screen.dart';
 import '../../features/quiz/quiz_scope_screen.dart';
 import '../../features/quiz/quiz_session_screen.dart';
 import '../../features/quiz/quiz_type_screen.dart';
+import '../../features/settings/account_sync_screen.dart';
+import '../../features/settings/notification_preview_screen.dart';
 import '../../features/settings/ai_providers_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/talks/talk_detail_screen.dart';
@@ -90,6 +92,16 @@ final appRouter = GoRouter(
           path: 'ai-providers',
           parentNavigatorKey: _rootNavigatorKey,
           builder: (c, s) => const AiProvidersScreen(),
+        ),
+        GoRoute(
+          path: 'account',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (c, s) => const AccountSyncScreen(),
+        ),
+        GoRoute(
+          path: 'previews',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (c, s) => const NotificationPreviewScreen(),
         ),
       ],
     ),

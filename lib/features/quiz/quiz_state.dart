@@ -131,6 +131,7 @@ class ActiveQuizNotifier extends Notifier<ActiveQuizState> {
 
     if (state.isFinished) {
       await repo.finishSession(state.sessionId!, state.score);
+      await ref.read(studyActivityServiceProvider).recordActivity();
     }
   }
 

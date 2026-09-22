@@ -2,8 +2,15 @@
     <!-- Daily Bible-study reminder notifications -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <!-- Lets reminders light up the screen and show on the lock screen (alarm-style),
+         like a messaging app. Android 14+ also needs the user to allow it in system
+         settings — see Settings → diagnostics → "Allow screen wake-up". -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
     <!-- Fingerprint/face lock for the AI API key vault -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- Attaching photos/videos/voice notes to a scripture, note or talk -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="dpbshub"
         android:name="${applicationName}"
@@ -30,6 +37,36 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- flutter_local_notifications does NOT declare these itself. Without
+             them, Android fires the scheduled alarm but nothing is registered
+             to turn it into a visible notification (instant "show now"
+             notifications work fine, which hides the problem), and nothing
+             reschedules the reminders after a reboot or app update. -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false" />
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+        <!-- Home-screen "study streak" widget (see StudyStreakWidgetProvider.kt) -->
+        <receiver
+            android:name=".StudyStreakWidgetProvider"
+            android:exported="true"
+            android:label="Study streak">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/study_streak_widget_info" />
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

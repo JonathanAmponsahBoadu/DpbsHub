@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/database.dart';
 import '../../data/providers.dart';
+import '../../data/repositories/attachments_repository.dart';
+import '../../shared/widgets/attachments_strip.dart';
 
 final _pointsProvider = StreamProvider.family<List<TalkPoint>, String>((ref, talkId) {
   return ref.watch(talksRepositoryProvider).watchPoints(talkId);
@@ -28,27 +30,39 @@ class TalkDetailScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('$e')),
         data: (points) {
+          final header = Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: AttachmentsStrip(ownerType: AttachmentOwner.talk, ownerId: talkId),
+          );
           if (points.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Text(
-                  'No outline points yet. Add each point as you go over the talk — '
-                  'these become your quiz material.',
-                  textAlign: TextAlign.center,
+            return Column(
+              children: [
+                header,
+                const Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Text(
+                        'No outline points yet. Add each point as you go over the talk — '
+                        'these become your quiz material.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             );
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-            itemCount: points.length,
+            itemCount: points.length + 1,
             itemBuilder: (context, i) {
-              final p = points[i];
+              if (i == 0) return header;
+              final p = points[i - 1];
               return Card(
-                margin: const EdgeInsets.only(bottom: 10),
+                margin: const EdgeInsets.only(top: 12),
                 child: ListTile(
-                  leading: CircleAvatar(child: Text('${i + 1}')),
+                  leading: CircleAvatar(child: Text('$i')),
                   title: Text(p.pointText),
                 ),
               );
@@ -82,6 +96,7 @@ class TalkDetailScreen extends ConsumerWidget {
               await ref
                   .read(talksRepositoryProvider)
                   .addPoint(talkId: talkId, pointText: ctrl.text.trim());
+              await ref.read(studyActivityServiceProvider).recordActivity();
               if (dialogContext.mounted) Navigator.of(dialogContext).pop();
             },
             child: const Text('Add'),

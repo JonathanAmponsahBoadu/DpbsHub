@@ -15,8 +15,10 @@ class NotesRepository {
   final AppDatabase _db;
   static const _uuid = Uuid();
 
-  Stream<List<Tag>> watchTags() =>
-      (_db.select(_db.tags)..orderBy([(t) => OrderingTerm.asc(t.name)])).watch();
+  Stream<List<Tag>> watchTags() => (_db.select(_db.tags)
+        ..where((t) => t.isDeleted.equals(false))
+        ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+      .watch();
 
   Future<Tag> createTag(String name, {String colorHex = 'FF6750A4'}) async {
     final tag = TagsCompanion.insert(
@@ -33,6 +35,7 @@ class NotesRepository {
   /// data volumes a personal study log accumulates.
   Stream<List<NoteWithTags>> watchAllNotes() async* {
     final notesStream = (_db.select(_db.studyNotes)
+          ..where((n) => n.isDeleted.equals(false))
           ..orderBy([(n) => OrderingTerm.desc(n.updatedAt)]))
         .watch();
     await for (final notes in notesStream) {
@@ -42,7 +45,7 @@ class NotesRepository {
 
   Stream<List<NoteWithTags>> watchNotesForEntry(String studyEntryId) async* {
     final notesStream = (_db.select(_db.studyNotes)
-          ..where((n) => n.studyEntryId.equals(studyEntryId)))
+          ..where((n) => n.studyEntryId.equals(studyEntryId) & n.isDeleted.equals(false)))
         .watch();
     await for (final notes in notesStream) {
       yield await _resolve(notes);
@@ -122,5 +125,10 @@ class NotesRepository {
   }
 
   Future<void> deleteNote(String id) =>
-      (_db.delete(_db.studyNotes)..where((n) => n.id.equals(id))).go();
+      (_db.update(_db.studyNotes)..where((n) => n.id.equals(id))).write(
+        StudyNotesCompanion(
+          isDeleted: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
 }

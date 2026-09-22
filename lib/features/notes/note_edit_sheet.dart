@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/database.dart';
 import '../../data/providers.dart';
+import '../../data/repositories/attachments_repository.dart';
 import '../../data/repositories/notes_repository.dart';
+import '../../shared/widgets/attachments_strip.dart';
 
 /// Bottom sheet to create or edit a standalone note from the Notes page —
 /// optionally attached to a scripture you've already logged, with full
@@ -131,6 +133,20 @@ class _NoteEditSheetState extends ConsumerState<_NoteEditSheet> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            if (widget.existing != null)
+              AttachmentsStrip(
+                ownerType: AttachmentOwner.studyNote,
+                ownerId: widget.existing!.note.id,
+              )
+            else
+              Text(
+                'Save this note first, then reopen it to attach a photo, video or voice note.',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
             const SizedBox(height: 20),
             FilledButton(
               onPressed: _saving ? null : _save,
@@ -187,6 +203,7 @@ class _NoteEditSheetState extends ConsumerState<_NoteEditSheet> {
         tagIds: _selectedTagIds.toList(),
       );
     }
+    await ref.read(studyActivityServiceProvider).recordActivity();
     if (mounted) Navigator.of(context).pop();
   }
 }

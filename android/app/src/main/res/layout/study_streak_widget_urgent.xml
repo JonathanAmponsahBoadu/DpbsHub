@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shown only while a streak is alive, you haven't studied, and the day is
+     running out. Same layout as study_streak_widget.xml, except the flame and
+     the button are ViewFlippers that auto-alternate, so the widget visibly
+     "blinks" for attention. Kept separate so the calm states stay static. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg_warning"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ViewFlipper
+            android:id="@+id/widget_flame_flipper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:autoStart="true"
+            android:flipInterval="700"
+            android:inAnimation="@android:anim/fade_in"
+            android:outAnimation="@android:anim/fade_out">
+
+            <TextView
+                android:id="@+id/widget_flame_a"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⏳"
+                android:textSize="30sp" />
+
+            <TextView
+                android:id="@+id/widget_flame_b"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⚠️"
+                android:textSize="30sp" />
+        </ViewFlipper>
+
+        <TextView
+            android:id="@+id/widget_streak"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="0"
+            android:textColor="#FFFFFF"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_streak_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="day streak"
+            android:textColor="#E6FFFFFF"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="3"
+        android:text="Your streak is at risk"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <ViewFlipper
+        android:id="@+id/widget_cta_flipper"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:autoStart="true"
+        android:flipInterval="700"
+        android:inAnimation="@android:anim/fade_in"
+        android:outAnimation="@android:anim/fade_out">
+
+        <TextView
+            android:id="@+id/widget_cta_a"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/widget_cta_bg"
+            android:paddingStart="14dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="6dp"
+            android:text="Study now"
+            android:textColor="#C2410C"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_cta_b"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/widget_cta_bg_alert"
+            android:paddingStart="14dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="6dp"
+            android:text="Save your streak!"
+            android:textColor="#C2410C"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </ViewFlipper>
+</LinearLayout>

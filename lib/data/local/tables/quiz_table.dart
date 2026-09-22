@@ -13,6 +13,7 @@ class QuizSessions extends Table {
   DateTimeColumn get finishedAt => dateTime().nullable()();
   IntColumn get score => integer().withDefault(const Constant(0))();
   IntColumn get totalQuestions => integer().withDefault(const Constant(0))();
+  DateTimeColumn get updatedAt => dateTime().clientDefault(() => DateTime.now())();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -25,6 +26,7 @@ class QuizAttempts extends Table {
   TextColumn get correctAnswer => text()();
   TextColumn get userAnswer => text().nullable()();
   BoolColumn get isCorrect => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get updatedAt => dateTime().clientDefault(() => DateTime.now())();
 
   @override
   Set<Column> get primaryKey => {id};

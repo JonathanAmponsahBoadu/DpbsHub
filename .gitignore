@@ -5,7 +5,7 @@
 *.swp
 .DS_Store
 .atom/
-.build/
+.build/m0
 .buildlog/
 .history
 .svn/
@@ -44,6 +44,14 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .claude
+
+# Gradle's own build outputs and local project cache — regenerated on every
+# `flutter run`/`flutter build`. Left untracked here, their constant churn
+# was making VS Code's Java extension repeatedly re-import the Gradle
+# project and leak background language-server worker processes.
+/android/build/
+/android/app/build/
+/android/.gradle/
 
 # Local dev-only secrets (AI provider API keys for testing) — never committed.
 # See .env.example for the expected shape. Loaded only in debug builds via

@@ -14,11 +14,13 @@ class TalksRepository {
   final AppDatabase _db;
   static const _uuid = Uuid();
 
-  Stream<List<Talk>> watchTalks() =>
-      (_db.select(_db.talks)..orderBy([(t) => OrderingTerm.desc(t.date)])).watch();
+  Stream<List<Talk>> watchTalks() => (_db.select(_db.talks)
+        ..where((t) => t.isDeleted.equals(false))
+        ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+      .watch();
 
   Stream<List<TalkPoint>> watchPoints(String talkId) => (_db.select(_db.talkPoints)
-        ..where((p) => p.talkId.equals(talkId))
+        ..where((p) => p.talkId.equals(talkId) & p.isDeleted.equals(false))
         ..orderBy([(p) => OrderingTerm.asc(p.orderIndex)]))
       .watch();
 
@@ -54,6 +56,15 @@ class TalksRepository {
         ));
   }
 
-  Future<void> deleteTalk(String id) =>
-      (_db.delete(_db.talks)..where((t) => t.id.equals(id))).go();
+  /// Soft-deletes the talk (and its outline points) so cloud sync can carry
+  /// the deletion to other devices instead of the talk reappearing on pull.
+  Future<void> deleteTalk(String id) async {
+    final now = DateTime.now();
+    await (_db.update(_db.talks)..where((t) => t.id.equals(id))).write(
+      TalksCompanion(isDeleted: const Value(true), updatedAt: Value(now)),
+    );
+    await (_db.update(_db.talkPoints)..where((p) => p.talkId.equals(id))).write(
+      TalkPointsCompanion(isDeleted: const Value(true), updatedAt: Value(now)),
+    );
+  }
 }

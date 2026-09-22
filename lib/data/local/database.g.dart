@@ -749,6 +749,21 @@ class $StudyEntriesTable extends StudyEntries
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -760,6 +775,7 @@ class $StudyEntriesTable extends StudyEntries
     verseText,
     createdAt,
     updatedAt,
+    isDeleted,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -840,6 +856,12 @@ class $StudyEntriesTable extends StudyEntries
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
     return context;
   }
 
@@ -885,6 +907,10 @@ class $StudyEntriesTable extends StudyEntries
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
     );
   }
 
@@ -904,6 +930,7 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
   final String? verseText;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isDeleted;
   const StudyEntry({
     required this.id,
     required this.bookId,
@@ -914,6 +941,7 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
     this.verseText,
     required this.createdAt,
     required this.updatedAt,
+    required this.isDeleted,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -929,6 +957,7 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
     return map;
   }
 
@@ -945,6 +974,7 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
           : Value(verseText),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
     );
   }
 
@@ -963,6 +993,7 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
       verseText: serializer.fromJson<String?>(json['verseText']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
     );
   }
   @override
@@ -978,6 +1009,7 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
       'verseText': serializer.toJson<String?>(verseText),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
     };
   }
 
@@ -991,6 +1023,7 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
     Value<String?> verseText = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isDeleted,
   }) => StudyEntry(
     id: id ?? this.id,
     bookId: bookId ?? this.bookId,
@@ -1001,6 +1034,7 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
     verseText: verseText.present ? verseText.value : this.verseText,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    isDeleted: isDeleted ?? this.isDeleted,
   );
   StudyEntry copyWithCompanion(StudyEntriesCompanion data) {
     return StudyEntry(
@@ -1015,6 +1049,7 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
       verseText: data.verseText.present ? data.verseText.value : this.verseText,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
     );
   }
 
@@ -1029,7 +1064,8 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
           ..write('language: $language, ')
           ..write('verseText: $verseText, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted')
           ..write(')'))
         .toString();
   }
@@ -1045,6 +1081,7 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
     verseText,
     createdAt,
     updatedAt,
+    isDeleted,
   );
   @override
   bool operator ==(Object other) =>
@@ -1058,7 +1095,8 @@ class StudyEntry extends DataClass implements Insertable<StudyEntry> {
           other.language == this.language &&
           other.verseText == this.verseText &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted);
 }
 
 class StudyEntriesCompanion extends UpdateCompanion<StudyEntry> {
@@ -1071,6 +1109,7 @@ class StudyEntriesCompanion extends UpdateCompanion<StudyEntry> {
   final Value<String?> verseText;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
   final Value<int> rowid;
   const StudyEntriesCompanion({
     this.id = const Value.absent(),
@@ -1082,6 +1121,7 @@ class StudyEntriesCompanion extends UpdateCompanion<StudyEntry> {
     this.verseText = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   StudyEntriesCompanion.insert({
@@ -1094,6 +1134,7 @@ class StudyEntriesCompanion extends UpdateCompanion<StudyEntry> {
     this.verseText = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
+    this.isDeleted = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        bookId = Value(bookId),
@@ -1113,6 +1154,7 @@ class StudyEntriesCompanion extends UpdateCompanion<StudyEntry> {
     Expression<String>? verseText,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1125,6 +1167,7 @@ class StudyEntriesCompanion extends UpdateCompanion<StudyEntry> {
       if (verseText != null) 'verse_text': verseText,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1139,6 +1182,7 @@ class StudyEntriesCompanion extends UpdateCompanion<StudyEntry> {
     Value<String?>? verseText,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<bool>? isDeleted,
     Value<int>? rowid,
   }) {
     return StudyEntriesCompanion(
@@ -1151,6 +1195,7 @@ class StudyEntriesCompanion extends UpdateCompanion<StudyEntry> {
       verseText: verseText ?? this.verseText,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1185,6 +1230,9 @@ class StudyEntriesCompanion extends UpdateCompanion<StudyEntry> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1203,6 +1251,7 @@ class StudyEntriesCompanion extends UpdateCompanion<StudyEntry> {
           ..write('verseText: $verseText, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1248,8 +1297,41 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
     requiredDuringInsert: false,
     defaultValue: const Constant('FF6750A4'),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, name, colorHex];
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    colorHex,
+    updatedAt,
+    isDeleted,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1281,6 +1363,18 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
         colorHex.isAcceptableOrUnknown(data['color_hex']!, _colorHexMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
     return context;
   }
 
@@ -1302,6 +1396,14 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
         DriftSqlType.string,
         data['${effectivePrefix}color_hex'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
     );
   }
 
@@ -1315,13 +1417,23 @@ class Tag extends DataClass implements Insertable<Tag> {
   final String id;
   final String name;
   final String colorHex;
-  const Tag({required this.id, required this.name, required this.colorHex});
+  final DateTime updatedAt;
+  final bool isDeleted;
+  const Tag({
+    required this.id,
+    required this.name,
+    required this.colorHex,
+    required this.updatedAt,
+    required this.isDeleted,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['color_hex'] = Variable<String>(colorHex);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
     return map;
   }
 
@@ -1330,6 +1442,8 @@ class Tag extends DataClass implements Insertable<Tag> {
       id: Value(id),
       name: Value(name),
       colorHex: Value(colorHex),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
     );
   }
 
@@ -1342,6 +1456,8 @@ class Tag extends DataClass implements Insertable<Tag> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       colorHex: serializer.fromJson<String>(json['colorHex']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
     );
   }
   @override
@@ -1351,19 +1467,31 @@ class Tag extends DataClass implements Insertable<Tag> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'colorHex': serializer.toJson<String>(colorHex),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
     };
   }
 
-  Tag copyWith({String? id, String? name, String? colorHex}) => Tag(
+  Tag copyWith({
+    String? id,
+    String? name,
+    String? colorHex,
+    DateTime? updatedAt,
+    bool? isDeleted,
+  }) => Tag(
     id: id ?? this.id,
     name: name ?? this.name,
     colorHex: colorHex ?? this.colorHex,
+    updatedAt: updatedAt ?? this.updatedAt,
+    isDeleted: isDeleted ?? this.isDeleted,
   );
   Tag copyWithCompanion(TagsCompanion data) {
     return Tag(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       colorHex: data.colorHex.present ? data.colorHex.value : this.colorHex,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
     );
   }
 
@@ -1372,37 +1500,47 @@ class Tag extends DataClass implements Insertable<Tag> {
     return (StringBuffer('Tag(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('colorHex: $colorHex')
+          ..write('colorHex: $colorHex, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, colorHex);
+  int get hashCode => Object.hash(id, name, colorHex, updatedAt, isDeleted);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Tag &&
           other.id == this.id &&
           other.name == this.name &&
-          other.colorHex == this.colorHex);
+          other.colorHex == this.colorHex &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted);
 }
 
 class TagsCompanion extends UpdateCompanion<Tag> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> colorHex;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
   final Value<int> rowid;
   const TagsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.colorHex = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TagsCompanion.insert({
     required String id,
     required String name,
     this.colorHex = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name);
@@ -1410,12 +1548,16 @@ class TagsCompanion extends UpdateCompanion<Tag> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? colorHex,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (colorHex != null) 'color_hex': colorHex,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1424,12 +1566,16 @@ class TagsCompanion extends UpdateCompanion<Tag> {
     Value<String>? id,
     Value<String>? name,
     Value<String>? colorHex,
+    Value<DateTime>? updatedAt,
+    Value<bool>? isDeleted,
     Value<int>? rowid,
   }) {
     return TagsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       colorHex: colorHex ?? this.colorHex,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1446,6 +1592,12 @@ class TagsCompanion extends UpdateCompanion<Tag> {
     if (colorHex.present) {
       map['color_hex'] = Variable<String>(colorHex.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1458,6 +1610,8 @@ class TagsCompanion extends UpdateCompanion<Tag> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('colorHex: $colorHex, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1535,6 +1689,21 @@ class $StudyNotesTable extends StudyNotes
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1543,6 +1712,7 @@ class $StudyNotesTable extends StudyNotes
     studyEntryId,
     createdAt,
     updatedAt,
+    isDeleted,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1602,6 +1772,12 @@ class $StudyNotesTable extends StudyNotes
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
     return context;
   }
 
@@ -1635,6 +1811,10 @@ class $StudyNotesTable extends StudyNotes
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
     );
   }
 
@@ -1651,6 +1831,7 @@ class StudyNote extends DataClass implements Insertable<StudyNote> {
   final String? studyEntryId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isDeleted;
   const StudyNote({
     required this.id,
     required this.noteText,
@@ -1658,6 +1839,7 @@ class StudyNote extends DataClass implements Insertable<StudyNote> {
     this.studyEntryId,
     required this.createdAt,
     required this.updatedAt,
+    required this.isDeleted,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1670,6 +1852,7 @@ class StudyNote extends DataClass implements Insertable<StudyNote> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
     return map;
   }
 
@@ -1683,6 +1866,7 @@ class StudyNote extends DataClass implements Insertable<StudyNote> {
           : Value(studyEntryId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
     );
   }
 
@@ -1698,6 +1882,7 @@ class StudyNote extends DataClass implements Insertable<StudyNote> {
       studyEntryId: serializer.fromJson<String?>(json['studyEntryId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
     );
   }
   @override
@@ -1710,6 +1895,7 @@ class StudyNote extends DataClass implements Insertable<StudyNote> {
       'studyEntryId': serializer.toJson<String?>(studyEntryId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
     };
   }
 
@@ -1720,6 +1906,7 @@ class StudyNote extends DataClass implements Insertable<StudyNote> {
     Value<String?> studyEntryId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isDeleted,
   }) => StudyNote(
     id: id ?? this.id,
     noteText: noteText ?? this.noteText,
@@ -1727,6 +1914,7 @@ class StudyNote extends DataClass implements Insertable<StudyNote> {
     studyEntryId: studyEntryId.present ? studyEntryId.value : this.studyEntryId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    isDeleted: isDeleted ?? this.isDeleted,
   );
   StudyNote copyWithCompanion(StudyNotesCompanion data) {
     return StudyNote(
@@ -1738,6 +1926,7 @@ class StudyNote extends DataClass implements Insertable<StudyNote> {
           : this.studyEntryId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
     );
   }
 
@@ -1749,14 +1938,22 @@ class StudyNote extends DataClass implements Insertable<StudyNote> {
           ..write('source: $source, ')
           ..write('studyEntryId: $studyEntryId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, noteText, source, studyEntryId, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    noteText,
+    source,
+    studyEntryId,
+    createdAt,
+    updatedAt,
+    isDeleted,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1766,7 +1963,8 @@ class StudyNote extends DataClass implements Insertable<StudyNote> {
           other.source == this.source &&
           other.studyEntryId == this.studyEntryId &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted);
 }
 
 class StudyNotesCompanion extends UpdateCompanion<StudyNote> {
@@ -1776,6 +1974,7 @@ class StudyNotesCompanion extends UpdateCompanion<StudyNote> {
   final Value<String?> studyEntryId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
   final Value<int> rowid;
   const StudyNotesCompanion({
     this.id = const Value.absent(),
@@ -1784,6 +1983,7 @@ class StudyNotesCompanion extends UpdateCompanion<StudyNote> {
     this.studyEntryId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   StudyNotesCompanion.insert({
@@ -1793,6 +1993,7 @@ class StudyNotesCompanion extends UpdateCompanion<StudyNote> {
     this.studyEntryId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
+    this.isDeleted = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        noteText = Value(noteText),
@@ -1806,6 +2007,7 @@ class StudyNotesCompanion extends UpdateCompanion<StudyNote> {
     Expression<String>? studyEntryId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1815,6 +2017,7 @@ class StudyNotesCompanion extends UpdateCompanion<StudyNote> {
       if (studyEntryId != null) 'study_entry_id': studyEntryId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1826,6 +2029,7 @@ class StudyNotesCompanion extends UpdateCompanion<StudyNote> {
     Value<String?>? studyEntryId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<bool>? isDeleted,
     Value<int>? rowid,
   }) {
     return StudyNotesCompanion(
@@ -1835,6 +2039,7 @@ class StudyNotesCompanion extends UpdateCompanion<StudyNote> {
       studyEntryId: studyEntryId ?? this.studyEntryId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1860,6 +2065,9 @@ class StudyNotesCompanion extends UpdateCompanion<StudyNote> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1875,6 +2083,7 @@ class StudyNotesCompanion extends UpdateCompanion<StudyNote> {
           ..write('studyEntryId: $studyEntryId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2138,8 +2347,42 @@ class $TalksTable extends Talks with TableInfo<$TalksTable, Talk> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, title, speaker, date];
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    title,
+    speaker,
+    date,
+    updatedAt,
+    isDeleted,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2179,6 +2422,18 @@ class $TalksTable extends Talks with TableInfo<$TalksTable, Talk> {
     } else if (isInserting) {
       context.missing(_dateMeta);
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
     return context;
   }
 
@@ -2204,6 +2459,14 @@ class $TalksTable extends Talks with TableInfo<$TalksTable, Talk> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}date'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
     );
   }
 
@@ -2218,11 +2481,15 @@ class Talk extends DataClass implements Insertable<Talk> {
   final String title;
   final String? speaker;
   final DateTime date;
+  final DateTime updatedAt;
+  final bool isDeleted;
   const Talk({
     required this.id,
     required this.title,
     this.speaker,
     required this.date,
+    required this.updatedAt,
+    required this.isDeleted,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2233,6 +2500,8 @@ class Talk extends DataClass implements Insertable<Talk> {
       map['speaker'] = Variable<String>(speaker);
     }
     map['date'] = Variable<DateTime>(date);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
     return map;
   }
 
@@ -2244,6 +2513,8 @@ class Talk extends DataClass implements Insertable<Talk> {
           ? const Value.absent()
           : Value(speaker),
       date: Value(date),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
     );
   }
 
@@ -2257,6 +2528,8 @@ class Talk extends DataClass implements Insertable<Talk> {
       title: serializer.fromJson<String>(json['title']),
       speaker: serializer.fromJson<String?>(json['speaker']),
       date: serializer.fromJson<DateTime>(json['date']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
     );
   }
   @override
@@ -2267,6 +2540,8 @@ class Talk extends DataClass implements Insertable<Talk> {
       'title': serializer.toJson<String>(title),
       'speaker': serializer.toJson<String?>(speaker),
       'date': serializer.toJson<DateTime>(date),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
     };
   }
 
@@ -2275,11 +2550,15 @@ class Talk extends DataClass implements Insertable<Talk> {
     String? title,
     Value<String?> speaker = const Value.absent(),
     DateTime? date,
+    DateTime? updatedAt,
+    bool? isDeleted,
   }) => Talk(
     id: id ?? this.id,
     title: title ?? this.title,
     speaker: speaker.present ? speaker.value : this.speaker,
     date: date ?? this.date,
+    updatedAt: updatedAt ?? this.updatedAt,
+    isDeleted: isDeleted ?? this.isDeleted,
   );
   Talk copyWithCompanion(TalksCompanion data) {
     return Talk(
@@ -2287,6 +2566,8 @@ class Talk extends DataClass implements Insertable<Talk> {
       title: data.title.present ? data.title.value : this.title,
       speaker: data.speaker.present ? data.speaker.value : this.speaker,
       date: data.date.present ? data.date.value : this.date,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
     );
   }
 
@@ -2296,13 +2577,16 @@ class Talk extends DataClass implements Insertable<Talk> {
           ..write('id: $id, ')
           ..write('title: $title, ')
           ..write('speaker: $speaker, ')
-          ..write('date: $date')
+          ..write('date: $date, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, title, speaker, date);
+  int get hashCode =>
+      Object.hash(id, title, speaker, date, updatedAt, isDeleted);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2310,7 +2594,9 @@ class Talk extends DataClass implements Insertable<Talk> {
           other.id == this.id &&
           other.title == this.title &&
           other.speaker == this.speaker &&
-          other.date == this.date);
+          other.date == this.date &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted);
 }
 
 class TalksCompanion extends UpdateCompanion<Talk> {
@@ -2318,12 +2604,16 @@ class TalksCompanion extends UpdateCompanion<Talk> {
   final Value<String> title;
   final Value<String?> speaker;
   final Value<DateTime> date;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
   final Value<int> rowid;
   const TalksCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
     this.speaker = const Value.absent(),
     this.date = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TalksCompanion.insert({
@@ -2331,6 +2621,8 @@ class TalksCompanion extends UpdateCompanion<Talk> {
     required String title,
     this.speaker = const Value.absent(),
     required DateTime date,
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -2340,6 +2632,8 @@ class TalksCompanion extends UpdateCompanion<Talk> {
     Expression<String>? title,
     Expression<String>? speaker,
     Expression<DateTime>? date,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2347,6 +2641,8 @@ class TalksCompanion extends UpdateCompanion<Talk> {
       if (title != null) 'title': title,
       if (speaker != null) 'speaker': speaker,
       if (date != null) 'date': date,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2356,6 +2652,8 @@ class TalksCompanion extends UpdateCompanion<Talk> {
     Value<String>? title,
     Value<String?>? speaker,
     Value<DateTime>? date,
+    Value<DateTime>? updatedAt,
+    Value<bool>? isDeleted,
     Value<int>? rowid,
   }) {
     return TalksCompanion(
@@ -2363,6 +2661,8 @@ class TalksCompanion extends UpdateCompanion<Talk> {
       title: title ?? this.title,
       speaker: speaker ?? this.speaker,
       date: date ?? this.date,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2382,6 +2682,12 @@ class TalksCompanion extends UpdateCompanion<Talk> {
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2395,6 +2701,8 @@ class TalksCompanion extends UpdateCompanion<Talk> {
           ..write('title: $title, ')
           ..write('speaker: $speaker, ')
           ..write('date: $date, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2464,6 +2772,33 @@ class $TalkPointsTable extends TalkPoints
           'REFERENCES study_entries (id)',
         ),
       );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2471,6 +2806,8 @@ class $TalkPointsTable extends TalkPoints
     orderIndex,
     pointText,
     linkedStudyEntryId,
+    updatedAt,
+    isDeleted,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2522,6 +2859,18 @@ class $TalkPointsTable extends TalkPoints
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
     return context;
   }
 
@@ -2551,6 +2900,14 @@ class $TalkPointsTable extends TalkPoints
         DriftSqlType.string,
         data['${effectivePrefix}linked_study_entry_id'],
       ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
     );
   }
 
@@ -2566,12 +2923,16 @@ class TalkPoint extends DataClass implements Insertable<TalkPoint> {
   final int orderIndex;
   final String pointText;
   final String? linkedStudyEntryId;
+  final DateTime updatedAt;
+  final bool isDeleted;
   const TalkPoint({
     required this.id,
     required this.talkId,
     required this.orderIndex,
     required this.pointText,
     this.linkedStudyEntryId,
+    required this.updatedAt,
+    required this.isDeleted,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2583,6 +2944,8 @@ class TalkPoint extends DataClass implements Insertable<TalkPoint> {
     if (!nullToAbsent || linkedStudyEntryId != null) {
       map['linked_study_entry_id'] = Variable<String>(linkedStudyEntryId);
     }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
     return map;
   }
 
@@ -2595,6 +2958,8 @@ class TalkPoint extends DataClass implements Insertable<TalkPoint> {
       linkedStudyEntryId: linkedStudyEntryId == null && nullToAbsent
           ? const Value.absent()
           : Value(linkedStudyEntryId),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
     );
   }
 
@@ -2611,6 +2976,8 @@ class TalkPoint extends DataClass implements Insertable<TalkPoint> {
       linkedStudyEntryId: serializer.fromJson<String?>(
         json['linkedStudyEntryId'],
       ),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
     );
   }
   @override
@@ -2622,6 +2989,8 @@ class TalkPoint extends DataClass implements Insertable<TalkPoint> {
       'orderIndex': serializer.toJson<int>(orderIndex),
       'pointText': serializer.toJson<String>(pointText),
       'linkedStudyEntryId': serializer.toJson<String?>(linkedStudyEntryId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
     };
   }
 
@@ -2631,6 +3000,8 @@ class TalkPoint extends DataClass implements Insertable<TalkPoint> {
     int? orderIndex,
     String? pointText,
     Value<String?> linkedStudyEntryId = const Value.absent(),
+    DateTime? updatedAt,
+    bool? isDeleted,
   }) => TalkPoint(
     id: id ?? this.id,
     talkId: talkId ?? this.talkId,
@@ -2639,6 +3010,8 @@ class TalkPoint extends DataClass implements Insertable<TalkPoint> {
     linkedStudyEntryId: linkedStudyEntryId.present
         ? linkedStudyEntryId.value
         : this.linkedStudyEntryId,
+    updatedAt: updatedAt ?? this.updatedAt,
+    isDeleted: isDeleted ?? this.isDeleted,
   );
   TalkPoint copyWithCompanion(TalkPointsCompanion data) {
     return TalkPoint(
@@ -2651,6 +3024,8 @@ class TalkPoint extends DataClass implements Insertable<TalkPoint> {
       linkedStudyEntryId: data.linkedStudyEntryId.present
           ? data.linkedStudyEntryId.value
           : this.linkedStudyEntryId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
     );
   }
 
@@ -2661,14 +3036,23 @@ class TalkPoint extends DataClass implements Insertable<TalkPoint> {
           ..write('talkId: $talkId, ')
           ..write('orderIndex: $orderIndex, ')
           ..write('pointText: $pointText, ')
-          ..write('linkedStudyEntryId: $linkedStudyEntryId')
+          ..write('linkedStudyEntryId: $linkedStudyEntryId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, talkId, orderIndex, pointText, linkedStudyEntryId);
+  int get hashCode => Object.hash(
+    id,
+    talkId,
+    orderIndex,
+    pointText,
+    linkedStudyEntryId,
+    updatedAt,
+    isDeleted,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2677,7 +3061,9 @@ class TalkPoint extends DataClass implements Insertable<TalkPoint> {
           other.talkId == this.talkId &&
           other.orderIndex == this.orderIndex &&
           other.pointText == this.pointText &&
-          other.linkedStudyEntryId == this.linkedStudyEntryId);
+          other.linkedStudyEntryId == this.linkedStudyEntryId &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted);
 }
 
 class TalkPointsCompanion extends UpdateCompanion<TalkPoint> {
@@ -2686,6 +3072,8 @@ class TalkPointsCompanion extends UpdateCompanion<TalkPoint> {
   final Value<int> orderIndex;
   final Value<String> pointText;
   final Value<String?> linkedStudyEntryId;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
   final Value<int> rowid;
   const TalkPointsCompanion({
     this.id = const Value.absent(),
@@ -2693,6 +3081,8 @@ class TalkPointsCompanion extends UpdateCompanion<TalkPoint> {
     this.orderIndex = const Value.absent(),
     this.pointText = const Value.absent(),
     this.linkedStudyEntryId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TalkPointsCompanion.insert({
@@ -2701,6 +3091,8 @@ class TalkPointsCompanion extends UpdateCompanion<TalkPoint> {
     required int orderIndex,
     required String pointText,
     this.linkedStudyEntryId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        talkId = Value(talkId),
@@ -2712,6 +3104,8 @@ class TalkPointsCompanion extends UpdateCompanion<TalkPoint> {
     Expression<int>? orderIndex,
     Expression<String>? pointText,
     Expression<String>? linkedStudyEntryId,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2721,6 +3115,8 @@ class TalkPointsCompanion extends UpdateCompanion<TalkPoint> {
       if (pointText != null) 'point_text': pointText,
       if (linkedStudyEntryId != null)
         'linked_study_entry_id': linkedStudyEntryId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2731,6 +3127,8 @@ class TalkPointsCompanion extends UpdateCompanion<TalkPoint> {
     Value<int>? orderIndex,
     Value<String>? pointText,
     Value<String?>? linkedStudyEntryId,
+    Value<DateTime>? updatedAt,
+    Value<bool>? isDeleted,
     Value<int>? rowid,
   }) {
     return TalkPointsCompanion(
@@ -2739,6 +3137,8 @@ class TalkPointsCompanion extends UpdateCompanion<TalkPoint> {
       orderIndex: orderIndex ?? this.orderIndex,
       pointText: pointText ?? this.pointText,
       linkedStudyEntryId: linkedStudyEntryId ?? this.linkedStudyEntryId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2761,6 +3161,12 @@ class TalkPointsCompanion extends UpdateCompanion<TalkPoint> {
     if (linkedStudyEntryId.present) {
       map['linked_study_entry_id'] = Variable<String>(linkedStudyEntryId.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2775,6 +3181,8 @@ class TalkPointsCompanion extends UpdateCompanion<TalkPoint> {
           ..write('orderIndex: $orderIndex, ')
           ..write('pointText: $pointText, ')
           ..write('linkedStudyEntryId: $linkedStudyEntryId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2873,6 +3281,18 @@ class $QuizSessionsTable extends QuizSessions
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2883,6 +3303,7 @@ class $QuizSessionsTable extends QuizSessions
     finishedAt,
     score,
     totalQuestions,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2957,6 +3378,12 @@ class $QuizSessionsTable extends QuizSessions
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -2998,6 +3425,10 @@ class $QuizSessionsTable extends QuizSessions
         DriftSqlType.int,
         data['${effectivePrefix}total_questions'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
@@ -3016,6 +3447,7 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
   final DateTime? finishedAt;
   final int score;
   final int totalQuestions;
+  final DateTime updatedAt;
   const QuizSession({
     required this.id,
     required this.scopeType,
@@ -3025,6 +3457,7 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
     this.finishedAt,
     required this.score,
     required this.totalQuestions,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3039,6 +3472,7 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
     }
     map['score'] = Variable<int>(score);
     map['total_questions'] = Variable<int>(totalQuestions);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
 
@@ -3054,6 +3488,7 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
           : Value(finishedAt),
       score: Value(score),
       totalQuestions: Value(totalQuestions),
+      updatedAt: Value(updatedAt),
     );
   }
 
@@ -3071,6 +3506,7 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
       finishedAt: serializer.fromJson<DateTime?>(json['finishedAt']),
       score: serializer.fromJson<int>(json['score']),
       totalQuestions: serializer.fromJson<int>(json['totalQuestions']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
   @override
@@ -3085,6 +3521,7 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
       'finishedAt': serializer.toJson<DateTime?>(finishedAt),
       'score': serializer.toJson<int>(score),
       'totalQuestions': serializer.toJson<int>(totalQuestions),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
@@ -3097,6 +3534,7 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
     Value<DateTime?> finishedAt = const Value.absent(),
     int? score,
     int? totalQuestions,
+    DateTime? updatedAt,
   }) => QuizSession(
     id: id ?? this.id,
     scopeType: scopeType ?? this.scopeType,
@@ -3106,6 +3544,7 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
     finishedAt: finishedAt.present ? finishedAt.value : this.finishedAt,
     score: score ?? this.score,
     totalQuestions: totalQuestions ?? this.totalQuestions,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
   QuizSession copyWithCompanion(QuizSessionsCompanion data) {
     return QuizSession(
@@ -3123,6 +3562,7 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
       totalQuestions: data.totalQuestions.present
           ? data.totalQuestions.value
           : this.totalQuestions,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -3136,7 +3576,8 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
           ..write('startedAt: $startedAt, ')
           ..write('finishedAt: $finishedAt, ')
           ..write('score: $score, ')
-          ..write('totalQuestions: $totalQuestions')
+          ..write('totalQuestions: $totalQuestions, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -3151,6 +3592,7 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
     finishedAt,
     score,
     totalQuestions,
+    updatedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -3163,7 +3605,8 @@ class QuizSession extends DataClass implements Insertable<QuizSession> {
           other.startedAt == this.startedAt &&
           other.finishedAt == this.finishedAt &&
           other.score == this.score &&
-          other.totalQuestions == this.totalQuestions);
+          other.totalQuestions == this.totalQuestions &&
+          other.updatedAt == this.updatedAt);
 }
 
 class QuizSessionsCompanion extends UpdateCompanion<QuizSession> {
@@ -3175,6 +3618,7 @@ class QuizSessionsCompanion extends UpdateCompanion<QuizSession> {
   final Value<DateTime?> finishedAt;
   final Value<int> score;
   final Value<int> totalQuestions;
+  final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const QuizSessionsCompanion({
     this.id = const Value.absent(),
@@ -3185,6 +3629,7 @@ class QuizSessionsCompanion extends UpdateCompanion<QuizSession> {
     this.finishedAt = const Value.absent(),
     this.score = const Value.absent(),
     this.totalQuestions = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   QuizSessionsCompanion.insert({
@@ -3196,6 +3641,7 @@ class QuizSessionsCompanion extends UpdateCompanion<QuizSession> {
     this.finishedAt = const Value.absent(),
     this.score = const Value.absent(),
     this.totalQuestions = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        scopeType = Value(scopeType),
@@ -3211,6 +3657,7 @@ class QuizSessionsCompanion extends UpdateCompanion<QuizSession> {
     Expression<DateTime>? finishedAt,
     Expression<int>? score,
     Expression<int>? totalQuestions,
+    Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3222,6 +3669,7 @@ class QuizSessionsCompanion extends UpdateCompanion<QuizSession> {
       if (finishedAt != null) 'finished_at': finishedAt,
       if (score != null) 'score': score,
       if (totalQuestions != null) 'total_questions': totalQuestions,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3235,6 +3683,7 @@ class QuizSessionsCompanion extends UpdateCompanion<QuizSession> {
     Value<DateTime?>? finishedAt,
     Value<int>? score,
     Value<int>? totalQuestions,
+    Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
     return QuizSessionsCompanion(
@@ -3246,6 +3695,7 @@ class QuizSessionsCompanion extends UpdateCompanion<QuizSession> {
       finishedAt: finishedAt ?? this.finishedAt,
       score: score ?? this.score,
       totalQuestions: totalQuestions ?? this.totalQuestions,
+      updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3277,6 +3727,9 @@ class QuizSessionsCompanion extends UpdateCompanion<QuizSession> {
     if (totalQuestions.present) {
       map['total_questions'] = Variable<int>(totalQuestions.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3294,6 +3747,7 @@ class QuizSessionsCompanion extends UpdateCompanion<QuizSession> {
           ..write('finishedAt: $finishedAt, ')
           ..write('score: $score, ')
           ..write('totalQuestions: $totalQuestions, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3377,6 +3831,18 @@ class $QuizAttemptsTable extends QuizAttempts
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3385,6 +3851,7 @@ class $QuizAttemptsTable extends QuizAttempts
     correctAnswer,
     userAnswer,
     isCorrect,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3442,6 +3909,12 @@ class $QuizAttemptsTable extends QuizAttempts
         isCorrect.isAcceptableOrUnknown(data['is_correct']!, _isCorrectMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -3475,6 +3948,10 @@ class $QuizAttemptsTable extends QuizAttempts
         DriftSqlType.bool,
         data['${effectivePrefix}is_correct'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
@@ -3491,6 +3968,7 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
   final String correctAnswer;
   final String? userAnswer;
   final bool isCorrect;
+  final DateTime updatedAt;
   const QuizAttempt({
     required this.id,
     required this.sessionId,
@@ -3498,6 +3976,7 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
     required this.correctAnswer,
     this.userAnswer,
     required this.isCorrect,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3510,6 +3989,7 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
       map['user_answer'] = Variable<String>(userAnswer);
     }
     map['is_correct'] = Variable<bool>(isCorrect);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
 
@@ -3523,6 +4003,7 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
           ? const Value.absent()
           : Value(userAnswer),
       isCorrect: Value(isCorrect),
+      updatedAt: Value(updatedAt),
     );
   }
 
@@ -3538,6 +4019,7 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
       correctAnswer: serializer.fromJson<String>(json['correctAnswer']),
       userAnswer: serializer.fromJson<String?>(json['userAnswer']),
       isCorrect: serializer.fromJson<bool>(json['isCorrect']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
   @override
@@ -3550,6 +4032,7 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
       'correctAnswer': serializer.toJson<String>(correctAnswer),
       'userAnswer': serializer.toJson<String?>(userAnswer),
       'isCorrect': serializer.toJson<bool>(isCorrect),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
@@ -3560,6 +4043,7 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
     String? correctAnswer,
     Value<String?> userAnswer = const Value.absent(),
     bool? isCorrect,
+    DateTime? updatedAt,
   }) => QuizAttempt(
     id: id ?? this.id,
     sessionId: sessionId ?? this.sessionId,
@@ -3567,6 +4051,7 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
     correctAnswer: correctAnswer ?? this.correctAnswer,
     userAnswer: userAnswer.present ? userAnswer.value : this.userAnswer,
     isCorrect: isCorrect ?? this.isCorrect,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
   QuizAttempt copyWithCompanion(QuizAttemptsCompanion data) {
     return QuizAttempt(
@@ -3582,6 +4067,7 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
           ? data.userAnswer.value
           : this.userAnswer,
       isCorrect: data.isCorrect.present ? data.isCorrect.value : this.isCorrect,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -3593,7 +4079,8 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
           ..write('promptText: $promptText, ')
           ..write('correctAnswer: $correctAnswer, ')
           ..write('userAnswer: $userAnswer, ')
-          ..write('isCorrect: $isCorrect')
+          ..write('isCorrect: $isCorrect, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -3606,6 +4093,7 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
     correctAnswer,
     userAnswer,
     isCorrect,
+    updatedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -3616,7 +4104,8 @@ class QuizAttempt extends DataClass implements Insertable<QuizAttempt> {
           other.promptText == this.promptText &&
           other.correctAnswer == this.correctAnswer &&
           other.userAnswer == this.userAnswer &&
-          other.isCorrect == this.isCorrect);
+          other.isCorrect == this.isCorrect &&
+          other.updatedAt == this.updatedAt);
 }
 
 class QuizAttemptsCompanion extends UpdateCompanion<QuizAttempt> {
@@ -3626,6 +4115,7 @@ class QuizAttemptsCompanion extends UpdateCompanion<QuizAttempt> {
   final Value<String> correctAnswer;
   final Value<String?> userAnswer;
   final Value<bool> isCorrect;
+  final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const QuizAttemptsCompanion({
     this.id = const Value.absent(),
@@ -3634,6 +4124,7 @@ class QuizAttemptsCompanion extends UpdateCompanion<QuizAttempt> {
     this.correctAnswer = const Value.absent(),
     this.userAnswer = const Value.absent(),
     this.isCorrect = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   QuizAttemptsCompanion.insert({
@@ -3643,6 +4134,7 @@ class QuizAttemptsCompanion extends UpdateCompanion<QuizAttempt> {
     required String correctAnswer,
     this.userAnswer = const Value.absent(),
     this.isCorrect = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        sessionId = Value(sessionId),
@@ -3655,6 +4147,7 @@ class QuizAttemptsCompanion extends UpdateCompanion<QuizAttempt> {
     Expression<String>? correctAnswer,
     Expression<String>? userAnswer,
     Expression<bool>? isCorrect,
+    Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3664,6 +4157,7 @@ class QuizAttemptsCompanion extends UpdateCompanion<QuizAttempt> {
       if (correctAnswer != null) 'correct_answer': correctAnswer,
       if (userAnswer != null) 'user_answer': userAnswer,
       if (isCorrect != null) 'is_correct': isCorrect,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3675,6 +4169,7 @@ class QuizAttemptsCompanion extends UpdateCompanion<QuizAttempt> {
     Value<String>? correctAnswer,
     Value<String?>? userAnswer,
     Value<bool>? isCorrect,
+    Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
     return QuizAttemptsCompanion(
@@ -3684,6 +4179,7 @@ class QuizAttemptsCompanion extends UpdateCompanion<QuizAttempt> {
       correctAnswer: correctAnswer ?? this.correctAnswer,
       userAnswer: userAnswer ?? this.userAnswer,
       isCorrect: isCorrect ?? this.isCorrect,
+      updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3709,6 +4205,9 @@ class QuizAttemptsCompanion extends UpdateCompanion<QuizAttempt> {
     if (isCorrect.present) {
       map['is_correct'] = Variable<bool>(isCorrect.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3724,6 +4223,7 @@ class QuizAttemptsCompanion extends UpdateCompanion<QuizAttempt> {
           ..write('correctAnswer: $correctAnswer, ')
           ..write('userAnswer: $userAnswer, ')
           ..write('isCorrect: $isCorrect, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4025,6 +4525,984 @@ class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
   }
 }
 
+class $StudyLogsTable extends StudyLogs
+    with TableInfo<$StudyLogsTable, StudyLog> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StudyLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    kind,
+    note,
+    createdAt,
+    updatedAt,
+    isDeleted,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'study_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StudyLog> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StudyLog map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StudyLog(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+    );
+  }
+
+  @override
+  $StudyLogsTable createAlias(String alias) {
+    return $StudyLogsTable(attachedDatabase, alias);
+  }
+}
+
+class StudyLog extends DataClass implements Insertable<StudyLog> {
+  final String id;
+
+  /// One of the keys in features/study_log/study_log_kinds.dart
+  /// ('broadcasting', 'restudy', 'drawing', 'family', 'meeting', 'other').
+  final String kind;
+  final String? note;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  const StudyLog({
+    required this.id,
+    required this.kind,
+    this.note,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.isDeleted,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    return map;
+  }
+
+  StudyLogsCompanion toCompanion(bool nullToAbsent) {
+    return StudyLogsCompanion(
+      id: Value(id),
+      kind: Value(kind),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+    );
+  }
+
+  factory StudyLog.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StudyLog(
+      id: serializer.fromJson<String>(json['id']),
+      kind: serializer.fromJson<String>(json['kind']),
+      note: serializer.fromJson<String?>(json['note']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'kind': serializer.toJson<String>(kind),
+      'note': serializer.toJson<String?>(note),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+    };
+  }
+
+  StudyLog copyWith({
+    String? id,
+    String? kind,
+    Value<String?> note = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isDeleted,
+  }) => StudyLog(
+    id: id ?? this.id,
+    kind: kind ?? this.kind,
+    note: note.present ? note.value : this.note,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    isDeleted: isDeleted ?? this.isDeleted,
+  );
+  StudyLog copyWithCompanion(StudyLogsCompanion data) {
+    return StudyLog(
+      id: data.id.present ? data.id.value : this.id,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      note: data.note.present ? data.note.value : this.note,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StudyLog(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('note: $note, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, kind, note, createdAt, updatedAt, isDeleted);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StudyLog &&
+          other.id == this.id &&
+          other.kind == this.kind &&
+          other.note == this.note &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted);
+}
+
+class StudyLogsCompanion extends UpdateCompanion<StudyLog> {
+  final Value<String> id;
+  final Value<String> kind;
+  final Value<String?> note;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
+  const StudyLogsCompanion({
+    this.id = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StudyLogsCompanion.insert({
+    required String id,
+    required String kind,
+    this.note = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       kind = Value(kind),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<StudyLog> custom({
+    Expression<String>? id,
+    Expression<String>? kind,
+    Expression<String>? note,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (kind != null) 'kind': kind,
+      if (note != null) 'note': note,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StudyLogsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? kind,
+    Value<String?>? note,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<bool>? isDeleted,
+    Value<int>? rowid,
+  }) {
+    return StudyLogsCompanion(
+      id: id ?? this.id,
+      kind: kind ?? this.kind,
+      note: note ?? this.note,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StudyLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('note: $note, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AttachmentsTable extends Attachments
+    with TableInfo<$AttachmentsTable, Attachment> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AttachmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ownerTypeMeta = const VerificationMeta(
+    'ownerType',
+  );
+  @override
+  late final GeneratedColumn<String> ownerType = GeneratedColumn<String>(
+    'owner_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ownerIdMeta = const VerificationMeta(
+    'ownerId',
+  );
+  @override
+  late final GeneratedColumn<String> ownerId = GeneratedColumn<String>(
+    'owner_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fileNameMeta = const VerificationMeta(
+    'fileName',
+  );
+  @override
+  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
+    'file_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _extensionMeta = const VerificationMeta(
+    'extension',
+  );
+  @override
+  late final GeneratedColumn<String> extension = GeneratedColumn<String>(
+    'extension',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    ownerType,
+    ownerId,
+    kind,
+    fileName,
+    extension,
+    createdAt,
+    updatedAt,
+    isDeleted,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'attachments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Attachment> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('owner_type')) {
+      context.handle(
+        _ownerTypeMeta,
+        ownerType.isAcceptableOrUnknown(data['owner_type']!, _ownerTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerTypeMeta);
+    }
+    if (data.containsKey('owner_id')) {
+      context.handle(
+        _ownerIdMeta,
+        ownerId.isAcceptableOrUnknown(data['owner_id']!, _ownerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('file_name')) {
+      context.handle(
+        _fileNameMeta,
+        fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fileNameMeta);
+    }
+    if (data.containsKey('extension')) {
+      context.handle(
+        _extensionMeta,
+        extension.isAcceptableOrUnknown(data['extension']!, _extensionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_extensionMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Attachment map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Attachment(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ownerType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_type'],
+      )!,
+      ownerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      fileName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_name'],
+      )!,
+      extension: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extension'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+    );
+  }
+
+  @override
+  $AttachmentsTable createAlias(String alias) {
+    return $AttachmentsTable(attachedDatabase, alias);
+  }
+}
+
+class Attachment extends DataClass implements Insertable<Attachment> {
+  final String id;
+
+  /// 'studyEntry', 'studyNote', or 'talk' — which table [ownerId] points into.
+  final String ownerType;
+  final String ownerId;
+
+  /// 'image', 'video', or 'audio'.
+  final String kind;
+
+  /// Filename only (relative to the attachments directory), not a full path
+  /// — the app's documents directory can move between installs/devices.
+  final String fileName;
+
+  /// Original extension, used to pick a player/viewer without relying on
+  /// the filename (e.g. 'jpg', 'mp4', 'm4a').
+  final String extension;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  const Attachment({
+    required this.id,
+    required this.ownerType,
+    required this.ownerId,
+    required this.kind,
+    required this.fileName,
+    required this.extension,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.isDeleted,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['owner_type'] = Variable<String>(ownerType);
+    map['owner_id'] = Variable<String>(ownerId);
+    map['kind'] = Variable<String>(kind);
+    map['file_name'] = Variable<String>(fileName);
+    map['extension'] = Variable<String>(extension);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    return map;
+  }
+
+  AttachmentsCompanion toCompanion(bool nullToAbsent) {
+    return AttachmentsCompanion(
+      id: Value(id),
+      ownerType: Value(ownerType),
+      ownerId: Value(ownerId),
+      kind: Value(kind),
+      fileName: Value(fileName),
+      extension: Value(extension),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+    );
+  }
+
+  factory Attachment.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Attachment(
+      id: serializer.fromJson<String>(json['id']),
+      ownerType: serializer.fromJson<String>(json['ownerType']),
+      ownerId: serializer.fromJson<String>(json['ownerId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      fileName: serializer.fromJson<String>(json['fileName']),
+      extension: serializer.fromJson<String>(json['extension']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'ownerType': serializer.toJson<String>(ownerType),
+      'ownerId': serializer.toJson<String>(ownerId),
+      'kind': serializer.toJson<String>(kind),
+      'fileName': serializer.toJson<String>(fileName),
+      'extension': serializer.toJson<String>(extension),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+    };
+  }
+
+  Attachment copyWith({
+    String? id,
+    String? ownerType,
+    String? ownerId,
+    String? kind,
+    String? fileName,
+    String? extension,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isDeleted,
+  }) => Attachment(
+    id: id ?? this.id,
+    ownerType: ownerType ?? this.ownerType,
+    ownerId: ownerId ?? this.ownerId,
+    kind: kind ?? this.kind,
+    fileName: fileName ?? this.fileName,
+    extension: extension ?? this.extension,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    isDeleted: isDeleted ?? this.isDeleted,
+  );
+  Attachment copyWithCompanion(AttachmentsCompanion data) {
+    return Attachment(
+      id: data.id.present ? data.id.value : this.id,
+      ownerType: data.ownerType.present ? data.ownerType.value : this.ownerType,
+      ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      fileName: data.fileName.present ? data.fileName.value : this.fileName,
+      extension: data.extension.present ? data.extension.value : this.extension,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Attachment(')
+          ..write('id: $id, ')
+          ..write('ownerType: $ownerType, ')
+          ..write('ownerId: $ownerId, ')
+          ..write('kind: $kind, ')
+          ..write('fileName: $fileName, ')
+          ..write('extension: $extension, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    ownerType,
+    ownerId,
+    kind,
+    fileName,
+    extension,
+    createdAt,
+    updatedAt,
+    isDeleted,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Attachment &&
+          other.id == this.id &&
+          other.ownerType == this.ownerType &&
+          other.ownerId == this.ownerId &&
+          other.kind == this.kind &&
+          other.fileName == this.fileName &&
+          other.extension == this.extension &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted);
+}
+
+class AttachmentsCompanion extends UpdateCompanion<Attachment> {
+  final Value<String> id;
+  final Value<String> ownerType;
+  final Value<String> ownerId;
+  final Value<String> kind;
+  final Value<String> fileName;
+  final Value<String> extension;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
+  const AttachmentsCompanion({
+    this.id = const Value.absent(),
+    this.ownerType = const Value.absent(),
+    this.ownerId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.fileName = const Value.absent(),
+    this.extension = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AttachmentsCompanion.insert({
+    required String id,
+    required String ownerType,
+    required String ownerId,
+    required String kind,
+    required String fileName,
+    required String extension,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       ownerType = Value(ownerType),
+       ownerId = Value(ownerId),
+       kind = Value(kind),
+       fileName = Value(fileName),
+       extension = Value(extension),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<Attachment> custom({
+    Expression<String>? id,
+    Expression<String>? ownerType,
+    Expression<String>? ownerId,
+    Expression<String>? kind,
+    Expression<String>? fileName,
+    Expression<String>? extension,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ownerType != null) 'owner_type': ownerType,
+      if (ownerId != null) 'owner_id': ownerId,
+      if (kind != null) 'kind': kind,
+      if (fileName != null) 'file_name': fileName,
+      if (extension != null) 'extension': extension,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AttachmentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? ownerType,
+    Value<String>? ownerId,
+    Value<String>? kind,
+    Value<String>? fileName,
+    Value<String>? extension,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<bool>? isDeleted,
+    Value<int>? rowid,
+  }) {
+    return AttachmentsCompanion(
+      id: id ?? this.id,
+      ownerType: ownerType ?? this.ownerType,
+      ownerId: ownerId ?? this.ownerId,
+      kind: kind ?? this.kind,
+      fileName: fileName ?? this.fileName,
+      extension: extension ?? this.extension,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ownerType.present) {
+      map['owner_type'] = Variable<String>(ownerType.value);
+    }
+    if (ownerId.present) {
+      map['owner_id'] = Variable<String>(ownerId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (fileName.present) {
+      map['file_name'] = Variable<String>(fileName.value);
+    }
+    if (extension.present) {
+      map['extension'] = Variable<String>(extension.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AttachmentsCompanion(')
+          ..write('id: $id, ')
+          ..write('ownerType: $ownerType, ')
+          ..write('ownerId: $ownerId, ')
+          ..write('kind: $kind, ')
+          ..write('fileName: $fileName, ')
+          ..write('extension: $extension, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4040,6 +5518,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ReminderSettingsTable reminderSettings = $ReminderSettingsTable(
     this,
   );
+  late final $StudyLogsTable studyLogs = $StudyLogsTable(this);
+  late final $AttachmentsTable attachments = $AttachmentsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4055,6 +5535,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     quizSessions,
     quizAttempts,
     reminderSettings,
+    studyLogs,
+    attachments,
   ];
 }
 
@@ -4478,6 +5960,7 @@ typedef $$StudyEntriesTableCreateCompanionBuilder =
       Value<String?> verseText,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<bool> isDeleted,
       Value<int> rowid,
     });
 typedef $$StudyEntriesTableUpdateCompanionBuilder =
@@ -4491,6 +5974,7 @@ typedef $$StudyEntriesTableUpdateCompanionBuilder =
       Value<String?> verseText,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<bool> isDeleted,
       Value<int> rowid,
     });
 
@@ -4597,6 +6081,11 @@ class $$StudyEntriesTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4723,6 +6212,11 @@ class $$StudyEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$BooksTableOrderingComposer get bookId {
     final $$BooksTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4781,6 +6275,9 @@ class $$StudyEntriesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
 
   $$BooksTableAnnotationComposer get bookId {
     final $$BooksTableAnnotationComposer composer = $composerBuilder(
@@ -4897,6 +6394,7 @@ class $$StudyEntriesTableTableManager
                 Value<String?> verseText = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => StudyEntriesCompanion(
                 id: id,
@@ -4908,6 +6406,7 @@ class $$StudyEntriesTableTableManager
                 verseText: verseText,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                isDeleted: isDeleted,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4921,6 +6420,7 @@ class $$StudyEntriesTableTableManager
                 Value<String?> verseText = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<bool> isDeleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => StudyEntriesCompanion.insert(
                 id: id,
@@ -4932,6 +6432,7 @@ class $$StudyEntriesTableTableManager
                 verseText: verseText,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                isDeleted: isDeleted,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -5063,6 +6564,8 @@ typedef $$TagsTableCreateCompanionBuilder =
       required String id,
       required String name,
       Value<String> colorHex,
+      Value<DateTime> updatedAt,
+      Value<bool> isDeleted,
       Value<int> rowid,
     });
 typedef $$TagsTableUpdateCompanionBuilder =
@@ -5070,6 +6573,8 @@ typedef $$TagsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> name,
       Value<String> colorHex,
+      Value<DateTime> updatedAt,
+      Value<bool> isDeleted,
       Value<int> rowid,
     });
 
@@ -5116,6 +6621,16 @@ class $$TagsTableFilterComposer extends Composer<_$AppDatabase, $TagsTable> {
 
   ColumnFilters<String> get colorHex => $composableBuilder(
     column: $table.colorHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5167,6 +6682,16 @@ class $$TagsTableOrderingComposer extends Composer<_$AppDatabase, $TagsTable> {
     column: $table.colorHex,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TagsTableAnnotationComposer
@@ -5186,6 +6711,12 @@ class $$TagsTableAnnotationComposer
 
   GeneratedColumn<String> get colorHex =>
       $composableBuilder(column: $table.colorHex, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
 
   Expression<T> noteTagLinksRefs<T extends Object>(
     Expression<T> Function($$NoteTagLinksTableAnnotationComposer a) f,
@@ -5244,11 +6775,15 @@ class $$TagsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> colorHex = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TagsCompanion(
                 id: id,
                 name: name,
                 colorHex: colorHex,
+                updatedAt: updatedAt,
+                isDeleted: isDeleted,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5256,11 +6791,15 @@ class $$TagsTableTableManager
                 required String id,
                 required String name,
                 Value<String> colorHex = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TagsCompanion.insert(
                 id: id,
                 name: name,
                 colorHex: colorHex,
+                updatedAt: updatedAt,
+                isDeleted: isDeleted,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -5319,6 +6858,7 @@ typedef $$StudyNotesTableCreateCompanionBuilder =
       Value<String?> studyEntryId,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<bool> isDeleted,
       Value<int> rowid,
     });
 typedef $$StudyNotesTableUpdateCompanionBuilder =
@@ -5329,6 +6869,7 @@ typedef $$StudyNotesTableUpdateCompanionBuilder =
       Value<String?> studyEntryId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<bool> isDeleted,
       Value<int> rowid,
     });
 
@@ -5404,6 +6945,11 @@ class $$StudyNotesTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5490,6 +7036,11 @@ class $$StudyNotesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$StudyEntriesTableOrderingComposer get studyEntryId {
     final $$StudyEntriesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -5537,6 +7088,9 @@ class $$StudyNotesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
 
   $$StudyEntriesTableAnnotationComposer get studyEntryId {
     final $$StudyEntriesTableAnnotationComposer composer = $composerBuilder(
@@ -5621,6 +7175,7 @@ class $$StudyNotesTableTableManager
                 Value<String?> studyEntryId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => StudyNotesCompanion(
                 id: id,
@@ -5629,6 +7184,7 @@ class $$StudyNotesTableTableManager
                 studyEntryId: studyEntryId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                isDeleted: isDeleted,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5639,6 +7195,7 @@ class $$StudyNotesTableTableManager
                 Value<String?> studyEntryId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<bool> isDeleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => StudyNotesCompanion.insert(
                 id: id,
@@ -5647,6 +7204,7 @@ class $$StudyNotesTableTableManager
                 studyEntryId: studyEntryId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                isDeleted: isDeleted,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6094,6 +7652,8 @@ typedef $$TalksTableCreateCompanionBuilder =
       required String title,
       Value<String?> speaker,
       required DateTime date,
+      Value<DateTime> updatedAt,
+      Value<bool> isDeleted,
       Value<int> rowid,
     });
 typedef $$TalksTableUpdateCompanionBuilder =
@@ -6102,6 +7662,8 @@ typedef $$TalksTableUpdateCompanionBuilder =
       Value<String> title,
       Value<String?> speaker,
       Value<DateTime> date,
+      Value<DateTime> updatedAt,
+      Value<bool> isDeleted,
       Value<int> rowid,
     });
 
@@ -6153,6 +7715,16 @@ class $$TalksTableFilterComposer extends Composer<_$AppDatabase, $TalksTable> {
 
   ColumnFilters<DateTime> get date => $composableBuilder(
     column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6210,6 +7782,16 @@ class $$TalksTableOrderingComposer
     column: $table.date,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TalksTableAnnotationComposer
@@ -6232,6 +7814,12 @@ class $$TalksTableAnnotationComposer
 
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
 
   Expression<T> talkPointsRefs<T extends Object>(
     Expression<T> Function($$TalkPointsTableAnnotationComposer a) f,
@@ -6291,12 +7879,16 @@ class $$TalksTableTableManager
                 Value<String> title = const Value.absent(),
                 Value<String?> speaker = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TalksCompanion(
                 id: id,
                 title: title,
                 speaker: speaker,
                 date: date,
+                updatedAt: updatedAt,
+                isDeleted: isDeleted,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6305,12 +7897,16 @@ class $$TalksTableTableManager
                 required String title,
                 Value<String?> speaker = const Value.absent(),
                 required DateTime date,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TalksCompanion.insert(
                 id: id,
                 title: title,
                 speaker: speaker,
                 date: date,
+                updatedAt: updatedAt,
+                isDeleted: isDeleted,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6368,6 +7964,8 @@ typedef $$TalkPointsTableCreateCompanionBuilder =
       required int orderIndex,
       required String pointText,
       Value<String?> linkedStudyEntryId,
+      Value<DateTime> updatedAt,
+      Value<bool> isDeleted,
       Value<int> rowid,
     });
 typedef $$TalkPointsTableUpdateCompanionBuilder =
@@ -6377,6 +7975,8 @@ typedef $$TalkPointsTableUpdateCompanionBuilder =
       Value<int> orderIndex,
       Value<String> pointText,
       Value<String?> linkedStudyEntryId,
+      Value<DateTime> updatedAt,
+      Value<bool> isDeleted,
       Value<int> rowid,
     });
 
@@ -6441,6 +8041,16 @@ class $$TalkPointsTableFilterComposer
 
   ColumnFilters<String> get pointText => $composableBuilder(
     column: $table.pointText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6515,6 +8125,16 @@ class $$TalkPointsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$TalksTableOrderingComposer get talkId {
     final $$TalksTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6581,6 +8201,12 @@ class $$TalkPointsTableAnnotationComposer
 
   GeneratedColumn<String> get pointText =>
       $composableBuilder(column: $table.pointText, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
 
   $$TalksTableAnnotationComposer get talkId {
     final $$TalksTableAnnotationComposer composer = $composerBuilder(
@@ -6662,6 +8288,8 @@ class $$TalkPointsTableTableManager
                 Value<int> orderIndex = const Value.absent(),
                 Value<String> pointText = const Value.absent(),
                 Value<String?> linkedStudyEntryId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TalkPointsCompanion(
                 id: id,
@@ -6669,6 +8297,8 @@ class $$TalkPointsTableTableManager
                 orderIndex: orderIndex,
                 pointText: pointText,
                 linkedStudyEntryId: linkedStudyEntryId,
+                updatedAt: updatedAt,
+                isDeleted: isDeleted,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6678,6 +8308,8 @@ class $$TalkPointsTableTableManager
                 required int orderIndex,
                 required String pointText,
                 Value<String?> linkedStudyEntryId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TalkPointsCompanion.insert(
                 id: id,
@@ -6685,6 +8317,8 @@ class $$TalkPointsTableTableManager
                 orderIndex: orderIndex,
                 pointText: pointText,
                 linkedStudyEntryId: linkedStudyEntryId,
+                updatedAt: updatedAt,
+                isDeleted: isDeleted,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6780,6 +8414,7 @@ typedef $$QuizSessionsTableCreateCompanionBuilder =
       Value<DateTime?> finishedAt,
       Value<int> score,
       Value<int> totalQuestions,
+      Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 typedef $$QuizSessionsTableUpdateCompanionBuilder =
@@ -6792,6 +8427,7 @@ typedef $$QuizSessionsTableUpdateCompanionBuilder =
       Value<DateTime?> finishedAt,
       Value<int> score,
       Value<int> totalQuestions,
+      Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 
@@ -6864,6 +8500,11 @@ class $$QuizSessionsTableFilterComposer
 
   ColumnFilters<int> get totalQuestions => $composableBuilder(
     column: $table.totalQuestions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6941,6 +8582,11 @@ class $$QuizSessionsTableOrderingComposer
     column: $table.totalQuestions,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$QuizSessionsTableAnnotationComposer
@@ -6981,6 +8627,9 @@ class $$QuizSessionsTableAnnotationComposer
     column: $table.totalQuestions,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   Expression<T> quizAttemptsRefs<T extends Object>(
     Expression<T> Function($$QuizAttemptsTableAnnotationComposer a) f,
@@ -7044,6 +8693,7 @@ class $$QuizSessionsTableTableManager
                 Value<DateTime?> finishedAt = const Value.absent(),
                 Value<int> score = const Value.absent(),
                 Value<int> totalQuestions = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => QuizSessionsCompanion(
                 id: id,
@@ -7054,6 +8704,7 @@ class $$QuizSessionsTableTableManager
                 finishedAt: finishedAt,
                 score: score,
                 totalQuestions: totalQuestions,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7066,6 +8717,7 @@ class $$QuizSessionsTableTableManager
                 Value<DateTime?> finishedAt = const Value.absent(),
                 Value<int> score = const Value.absent(),
                 Value<int> totalQuestions = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => QuizSessionsCompanion.insert(
                 id: id,
@@ -7076,6 +8728,7 @@ class $$QuizSessionsTableTableManager
                 finishedAt: finishedAt,
                 score: score,
                 totalQuestions: totalQuestions,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7142,6 +8795,7 @@ typedef $$QuizAttemptsTableCreateCompanionBuilder =
       required String correctAnswer,
       Value<String?> userAnswer,
       Value<bool> isCorrect,
+      Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 typedef $$QuizAttemptsTableUpdateCompanionBuilder =
@@ -7152,6 +8806,7 @@ typedef $$QuizAttemptsTableUpdateCompanionBuilder =
       Value<String> correctAnswer,
       Value<String?> userAnswer,
       Value<bool> isCorrect,
+      Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 
@@ -7208,6 +8863,11 @@ class $$QuizAttemptsTableFilterComposer
 
   ColumnFilters<bool> get isCorrect => $composableBuilder(
     column: $table.isCorrect,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7269,6 +8929,11 @@ class $$QuizAttemptsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$QuizSessionsTableOrderingComposer get sessionId {
     final $$QuizSessionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -7322,6 +8987,9 @@ class $$QuizAttemptsTableAnnotationComposer
 
   GeneratedColumn<bool> get isCorrect =>
       $composableBuilder(column: $table.isCorrect, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$QuizSessionsTableAnnotationComposer get sessionId {
     final $$QuizSessionsTableAnnotationComposer composer = $composerBuilder(
@@ -7381,6 +9049,7 @@ class $$QuizAttemptsTableTableManager
                 Value<String> correctAnswer = const Value.absent(),
                 Value<String?> userAnswer = const Value.absent(),
                 Value<bool> isCorrect = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => QuizAttemptsCompanion(
                 id: id,
@@ -7389,6 +9058,7 @@ class $$QuizAttemptsTableTableManager
                 correctAnswer: correctAnswer,
                 userAnswer: userAnswer,
                 isCorrect: isCorrect,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7399,6 +9069,7 @@ class $$QuizAttemptsTableTableManager
                 required String correctAnswer,
                 Value<String?> userAnswer = const Value.absent(),
                 Value<bool> isCorrect = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => QuizAttemptsCompanion.insert(
                 id: id,
@@ -7407,6 +9078,7 @@ class $$QuizAttemptsTableTableManager
                 correctAnswer: correctAnswer,
                 userAnswer: userAnswer,
                 isCorrect: isCorrect,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7666,6 +9338,513 @@ typedef $$ReminderSettingsTableProcessedTableManager =
       ReminderSetting,
       PrefetchHooks Function()
     >;
+typedef $$StudyLogsTableCreateCompanionBuilder =
+    StudyLogsCompanion Function({
+      required String id,
+      required String kind,
+      Value<String?> note,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<bool> isDeleted,
+      Value<int> rowid,
+    });
+typedef $$StudyLogsTableUpdateCompanionBuilder =
+    StudyLogsCompanion Function({
+      Value<String> id,
+      Value<String> kind,
+      Value<String?> note,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<bool> isDeleted,
+      Value<int> rowid,
+    });
+
+class $$StudyLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $StudyLogsTable> {
+  $$StudyLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StudyLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $StudyLogsTable> {
+  $$StudyLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StudyLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StudyLogsTable> {
+  $$StudyLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+}
+
+class $$StudyLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StudyLogsTable,
+          StudyLog,
+          $$StudyLogsTableFilterComposer,
+          $$StudyLogsTableOrderingComposer,
+          $$StudyLogsTableAnnotationComposer,
+          $$StudyLogsTableCreateCompanionBuilder,
+          $$StudyLogsTableUpdateCompanionBuilder,
+          (StudyLog, BaseReferences<_$AppDatabase, $StudyLogsTable, StudyLog>),
+          StudyLog,
+          PrefetchHooks Function()
+        > {
+  $$StudyLogsTableTableManager(_$AppDatabase db, $StudyLogsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StudyLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StudyLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StudyLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StudyLogsCompanion(
+                id: id,
+                kind: kind,
+                note: note,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                isDeleted: isDeleted,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String kind,
+                Value<String?> note = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StudyLogsCompanion.insert(
+                id: id,
+                kind: kind,
+                note: note,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                isDeleted: isDeleted,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$StudyLogsTable, StudyLog>(table),
+                  BaseReferences<_$AppDatabase, $StudyLogsTable, StudyLog>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StudyLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StudyLogsTable,
+      StudyLog,
+      $$StudyLogsTableFilterComposer,
+      $$StudyLogsTableOrderingComposer,
+      $$StudyLogsTableAnnotationComposer,
+      $$StudyLogsTableCreateCompanionBuilder,
+      $$StudyLogsTableUpdateCompanionBuilder,
+      (StudyLog, BaseReferences<_$AppDatabase, $StudyLogsTable, StudyLog>),
+      StudyLog,
+      PrefetchHooks Function()
+    >;
+typedef $$AttachmentsTableCreateCompanionBuilder =
+    AttachmentsCompanion Function({
+      required String id,
+      required String ownerType,
+      required String ownerId,
+      required String kind,
+      required String fileName,
+      required String extension,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<bool> isDeleted,
+      Value<int> rowid,
+    });
+typedef $$AttachmentsTableUpdateCompanionBuilder =
+    AttachmentsCompanion Function({
+      Value<String> id,
+      Value<String> ownerType,
+      Value<String> ownerId,
+      Value<String> kind,
+      Value<String> fileName,
+      Value<String> extension,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<bool> isDeleted,
+      Value<int> rowid,
+    });
+
+class $$AttachmentsTableFilterComposer
+    extends Composer<_$AppDatabase, $AttachmentsTable> {
+  $$AttachmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerType => $composableBuilder(
+    column: $table.ownerType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get extension => $composableBuilder(
+    column: $table.extension,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AttachmentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AttachmentsTable> {
+  $$AttachmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ownerType => $composableBuilder(
+    column: $table.ownerType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get extension => $composableBuilder(
+    column: $table.extension,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AttachmentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AttachmentsTable> {
+  $$AttachmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerType =>
+      $composableBuilder(column: $table.ownerType, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerId =>
+      $composableBuilder(column: $table.ownerId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get fileName =>
+      $composableBuilder(column: $table.fileName, builder: (column) => column);
+
+  GeneratedColumn<String> get extension =>
+      $composableBuilder(column: $table.extension, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+}
+
+class $$AttachmentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AttachmentsTable,
+          Attachment,
+          $$AttachmentsTableFilterComposer,
+          $$AttachmentsTableOrderingComposer,
+          $$AttachmentsTableAnnotationComposer,
+          $$AttachmentsTableCreateCompanionBuilder,
+          $$AttachmentsTableUpdateCompanionBuilder,
+          (
+            Attachment,
+            BaseReferences<_$AppDatabase, $AttachmentsTable, Attachment>,
+          ),
+          Attachment,
+          PrefetchHooks Function()
+        > {
+  $$AttachmentsTableTableManager(_$AppDatabase db, $AttachmentsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AttachmentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AttachmentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AttachmentsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> ownerType = const Value.absent(),
+                Value<String> ownerId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> fileName = const Value.absent(),
+                Value<String> extension = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AttachmentsCompanion(
+                id: id,
+                ownerType: ownerType,
+                ownerId: ownerId,
+                kind: kind,
+                fileName: fileName,
+                extension: extension,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                isDeleted: isDeleted,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String ownerType,
+                required String ownerId,
+                required String kind,
+                required String fileName,
+                required String extension,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AttachmentsCompanion.insert(
+                id: id,
+                ownerType: ownerType,
+                ownerId: ownerId,
+                kind: kind,
+                fileName: fileName,
+                extension: extension,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                isDeleted: isDeleted,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AttachmentsTable, Attachment>(table),
+                  BaseReferences<_$AppDatabase, $AttachmentsTable, Attachment>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AttachmentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AttachmentsTable,
+      Attachment,
+      $$AttachmentsTableFilterComposer,
+      $$AttachmentsTableOrderingComposer,
+      $$AttachmentsTableAnnotationComposer,
+      $$AttachmentsTableCreateCompanionBuilder,
+      $$AttachmentsTableUpdateCompanionBuilder,
+      (
+        Attachment,
+        BaseReferences<_$AppDatabase, $AttachmentsTable, Attachment>,
+      ),
+      Attachment,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7689,4 +9868,8 @@ class $AppDatabaseManager {
       $$QuizAttemptsTableTableManager(_db, _db.quizAttempts);
   $$ReminderSettingsTableTableManager get reminderSettings =>
       $$ReminderSettingsTableTableManager(_db, _db.reminderSettings);
+  $$StudyLogsTableTableManager get studyLogs =>
+      $$StudyLogsTableTableManager(_db, _db.studyLogs);
+  $$AttachmentsTableTableManager get attachments =>
+      $$AttachmentsTableTableManager(_db, _db.attachments);
 }

@@ -20,11 +20,11 @@ class AppTheme {
   static const goldLight = Color(0xFFF3D27A);
   static const goldDeep = Color(0xFFB9860F);
 
-  // Testament indicator dots on the Bible book grid — a high-contrast pair
-  // (deliberately not two more shades of the app's emerald/gold palette, so
-  // the two halves of the Bible stay visually distinct at a glance).
-  static const testamentHebrew = Color(0xFFB5432E); // brick red
-  static const testamentGreek = Color(0xFF1E3A8A); // deep blue
+  // Testament indicator dots on the Bible book grid — white vs. gold reads
+  // clearly against the emerald tile fill while staying inside the app's
+  // existing palette (gold already means "Bible" elsewhere in the UI).
+  static const testamentHebrew = Colors.white;
+  static const testamentGreek = gold;
 
   // Signature gradient — a single hue (emerald) for depth, used sparingly on
   // hero surfaces (home header, results celebration) so it reads as "just
@@ -67,7 +67,7 @@ class AppTheme {
       onPrimary: Colors.white,
       secondary: amber,
       tertiary: sky,
-      surface: const Color(0xFF13201A),
+      surface: Colors.black,
     );
     return _base(scheme);
   }

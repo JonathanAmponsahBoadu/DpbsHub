@@ -13,6 +13,7 @@ class StudyNotes extends Table {
       text().nullable().references(StudyEntries, #id)();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};

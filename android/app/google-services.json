@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "524985128104",
+    "project_id": "dpbshub",
+    "storage_bucket": "dpbshub.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:524985128104:android:b2d33b7f1134da7fa4de9d",
+        "android_client_info": {
+          "package_name": "com.dpbshub.dpbshub"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "524985128104-qd812rli47sg3qvp56kqu3omq3hd7ar1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dpbshub.dpbshub",
+            "certificate_hash": "d89d48db87aba7cda2abdc317c596ec3fd989a0a"
+          }
+        },
+        {
+          "client_id": "524985128104-ocklh2ghe9ct3tbpkjt4slh08chtr827.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5vb6hs3BjVCfErze2JaULaRKBBouy96Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "524985128104-ocklh2ghe9ct3tbpkjt4slh08chtr827.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

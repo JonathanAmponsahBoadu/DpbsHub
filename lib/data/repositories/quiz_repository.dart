@@ -308,10 +308,12 @@ class QuizRepository {
   }
 
   Future<void> finishSession(String sessionId, int score) async {
+    final now = DateTime.now();
     await (_db.update(_db.quizSessions)..where((s) => s.id.equals(sessionId)))
         .write(QuizSessionsCompanion(
-      finishedAt: Value(DateTime.now()),
+      finishedAt: Value(now),
       score: Value(score),
+      updatedAt: Value(now),
     ));
   }
 

@@ -1,0 +1,34 @@
+{
+  "postman.settings.dotenv-detection-notification-visibility": false,
+
+  // This is a Flutter app — the android/ folder is just the native shell (a
+  // couple of small Kotlin files, never edited beyond initial setup).
+  // Importing it as a full Gradle/Java project bought nothing and was the
+  // cause of a real problem: constant file churn under android/build/ on
+  // every `flutter run` kept re-triggering the Java extension's Gradle
+  // import, which leaked a new background worker JVM each time instead of
+  // reusing one (24+ stacked up, ~3.3GB). Disabling import here stops that
+  // at the source, for this workspace and any future clone of this repo.
+  "java.import.gradle.enabled": false,
+  "java.import.maven.enabled": false,
+  "java.autobuild.enabled": false,
+  "java.import.exclusions": ["**/android/**", "**/build/**", "**/.gradle/**"],
+
+  "files.watcherExclude": {
+    "**/android/build/**": true,
+    "**/android/.gradle/**": true,
+    "**/android/app/build/**": true,
+    "**/build/**": true,
+    "**/.dart_tool/**": true
+  },
+  "files.exclude": {
+    "**/android/build": true,
+    "**/android/.gradle": true
+  },
+  "search.exclude": {
+    "**/android/build": true,
+    "**/android/.gradle": true,
+    "**/build": true
+  },
+  "cmake.sourceDirectory": "C:/Users/USER/Documents/CPEN -L400/Personl Projects/DpbsHub/windows"
+}

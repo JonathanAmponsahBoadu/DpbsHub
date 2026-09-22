@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/assets_source/verse_counts.dart';
 import '../../data/local/database.dart';
 import '../../data/providers.dart';
+import '../../data/repositories/attachments_repository.dart';
+import '../../shared/widgets/attachments_strip.dart';
 
 /// Bottom sheet to add (or edit) a studied verse/range: the verse text you
 /// personally typed/pasted in, plus an optional note and tags — all in one
@@ -163,6 +165,20 @@ class _VerseEntrySheetState extends ConsumerState<_VerseEntrySheet> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            if (widget.existing != null)
+              AttachmentsStrip(
+                ownerType: AttachmentOwner.studyEntry,
+                ownerId: widget.existing!.id,
+              )
+            else
+              Text(
+                'Save this entry first, then reopen it to attach a photo, video or voice note.',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
             const SizedBox(height: 20),
             FilledButton(
               onPressed: _saving ? null : _save,
@@ -241,6 +257,7 @@ class _VerseEntrySheetState extends ConsumerState<_VerseEntrySheet> {
       );
     }
 
+    await ref.read(studyActivityServiceProvider).recordActivity();
     if (mounted) Navigator.of(context).pop();
   }
 }

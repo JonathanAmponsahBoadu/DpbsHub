@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#17A673</color>
+    <!-- Native launch screen (shown before Flutter draws its first frame):
+         the app's signature emerald in light mode, pure black in dark mode
+         (see values-night/colors.xml) so there's never a white flash. -->
+    <color name="splash_background">#17A673</color>
 </resources>

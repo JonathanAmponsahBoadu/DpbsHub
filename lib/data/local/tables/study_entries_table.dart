@@ -13,6 +13,9 @@ class StudyEntries extends Table {
   TextColumn get verseText => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  // Soft-delete flag: cloud sync needs a tombstone to propagate a deletion to
+  // your other devices instead of a row just silently reappearing on pull.
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};

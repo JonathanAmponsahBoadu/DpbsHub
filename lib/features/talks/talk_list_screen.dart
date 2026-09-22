@@ -122,6 +122,7 @@ class TalkListScreen extends ConsumerWidget {
                       speaker: speakerCtrl.text.trim().isEmpty ? null : speakerCtrl.text.trim(),
                       date: date,
                     );
+                await ref.read(studyActivityServiceProvider).recordActivity();
                 if (dialogContext.mounted) Navigator.of(dialogContext).pop();
               },
               child: const Text('Create'),

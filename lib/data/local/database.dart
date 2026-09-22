@@ -12,6 +12,8 @@ import 'tables/notes_table.dart';
 import 'tables/talks_table.dart';
 import 'tables/quiz_table.dart';
 import 'tables/reminder_settings_table.dart';
+import 'tables/study_logs_table.dart';
+import 'tables/attachments_table.dart';
 
 part 'database.g.dart';
 
@@ -26,25 +28,38 @@ part 'database.g.dart';
   QuizSessions,
   QuizAttempts,
   ReminderSettings,
+  StudyLogs,
+  Attachments,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
         onUpgrade: (m, from, to) async {
-          // Pre-release app, no real user data to preserve yet: simplest
-          // correct migration is to rebuild the schema from scratch rather
-          // than hand-write incremental ALTER steps for each version bump.
-          for (final table in allTables) {
-            await m.deleteTable(table.actualTableName);
+          // Databases older than v4 were pre-release and held no data worth
+          // keeping, so those are simply rebuilt from scratch.
+          if (from < 4) {
+            for (final table in allTables) {
+              await m.deleteTable(table.actualTableName);
+            }
+            await m.createAll();
+            return;
           }
-          await m.createAll();
+
+          // From v4 on the database holds real study data: every upgrade
+          // below must ADD to it, never drop or recreate existing tables.
+          if (from < 5) {
+            await m.createTable(studyLogs);
+          }
+          if (from < 6) {
+            await m.createTable(attachments);
+          }
         },
       );
 }

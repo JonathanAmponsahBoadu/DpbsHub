@@ -17,7 +17,8 @@ class BibleRepository {
   /// All study entries you've logged for a given book+chapter, ordered by verse.
   Stream<List<StudyEntry>> watchEntriesForChapter(int bookId, int chapter) {
     final query = _db.select(_db.studyEntries)
-      ..where((e) => e.bookId.equals(bookId) & e.chapter.equals(chapter))
+      ..where((e) =>
+          e.bookId.equals(bookId) & e.chapter.equals(chapter) & e.isDeleted.equals(false))
       ..orderBy([(e) => OrderingTerm.asc(e.verseStart)]);
     return query.watch();
   }
@@ -27,7 +28,7 @@ class BibleRepository {
   Stream<Set<int>> watchStudiedChapters(int bookId) {
     final query = _db.selectOnly(_db.studyEntries, distinct: true)
       ..addColumns([_db.studyEntries.chapter])
-      ..where(_db.studyEntries.bookId.equals(bookId));
+      ..where(_db.studyEntries.bookId.equals(bookId) & _db.studyEntries.isDeleted.equals(false));
     return query
         .map((row) => row.read(_db.studyEntries.chapter)!)
         .watch()
@@ -61,12 +62,21 @@ class BibleRepository {
         .getSingle();
   }
 
+  /// Soft-deletes the entry (rather than a hard row delete) so a future
+  /// cloud sync can propagate the deletion to your other devices instead of
+  /// the row silently reappearing on the next pull.
   Future<void> deleteEntry(String id) =>
-      (_db.delete(_db.studyEntries)..where((e) => e.id.equals(id))).go();
+      (_db.update(_db.studyEntries)..where((e) => e.id.equals(id))).write(
+        StudyEntriesCompanion(
+          isDeleted: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
 
   /// Every scripture you've logged, across all books — used by the Notes
   /// page to let you attach a note to an existing entry without leaving it.
   Stream<List<StudyEntry>> watchAllEntries() => (_db.select(_db.studyEntries)
+        ..where((e) => e.isDeleted.equals(false))
         ..orderBy([
           (e) => OrderingTerm.asc(e.bookId),
           (e) => OrderingTerm.asc(e.chapter),

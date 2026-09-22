@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification small icon: an open book. Android renders this as a flat
+     white silhouette in the status bar and tints it with the notification's
+     accent colour (emerald) in the shade. Must stay single-colour. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M11.4,6.6C9.9,5.4 7.9,4.8 5.8,4.8C4.4,4.8 3.1,5 2,5.5L2,18.7C3.1,18.2 4.4,18 5.8,18C7.9,18 9.9,18.6 11.4,19.8Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12.6,6.6C14.1,5.4 16.1,4.8 18.2,4.8C19.6,4.8 20.9,5 22,5.5L22,18.7C20.9,18.2 19.6,18 18.2,18C16.1,18 14.1,18.6 12.6,19.8Z" />
+</vector>

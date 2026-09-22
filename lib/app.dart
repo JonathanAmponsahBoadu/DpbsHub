@@ -4,6 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'data/providers.dart';
+import 'shared/widgets/animated_splash.dart';
+
+/// Keeps the splash on screen long enough for its entrance animation to
+/// actually be seen — seeding the Bible skeleton is usually near-instant,
+/// and a splash that flashes for 200ms just looks like a glitch.
+final _splashHoldProvider = FutureProvider<void>(
+  (ref) => Future<void>.delayed(const Duration(milliseconds: 1600)),
+);
 
 class DpbsHubApp extends ConsumerWidget {
   const DpbsHubApp({super.key});
@@ -11,6 +19,7 @@ class DpbsHubApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final seed = ref.watch(bibleSeedProvider);
+    final hold = ref.watch(_splashHoldProvider);
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
@@ -21,51 +30,27 @@ class DpbsHubApp extends ConsumerWidget {
       themeMode: themeMode,
       routerConfig: appRouter,
       builder: (context, child) {
-        return seed.when(
-          data: (_) {
-            // Fire-and-forget: seeds reminder defaults + requests
-            // notification permission once the app is actually showing,
-            // rather than blocking the splash screen behind a permission
-            // dialog.
-            ref.watch(reminderSetupProvider);
-            return child ?? const SizedBox.shrink();
-          },
-          loading: () => const _SplashScreen(),
-          error: (e, st) => _SplashScreen(error: '$e'),
+        final Widget content;
+        if (seed.hasError) {
+          content = AnimatedSplash(key: const ValueKey('splash-error'), error: '${seed.error}');
+        } else if (seed.hasValue && hold.hasValue) {
+          // Fire-and-forget: seeds reminder defaults, requests notification
+          // permission and rebuilds the reminder/nudge schedule once the app
+          // is actually showing, rather than blocking the splash behind a
+          // permission dialog.
+          ref.watch(reminderSetupProvider);
+          content = KeyedSubtree(
+            key: const ValueKey('app'),
+            child: child ?? const SizedBox.shrink(),
+          );
+        } else {
+          content = const AnimatedSplash(key: ValueKey('splash'));
+        }
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          child: content,
         );
       },
-    );
-  }
-}
-
-class _SplashScreen extends StatelessWidget {
-  const _SplashScreen({this.error});
-  final String? error;
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.menu_book, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                error == null ? 'Preparing your study hub…' : 'Setup failed: $error',
-                textAlign: TextAlign.center,
-              ),
-              if (error == null) ...[
-                const SizedBox(height: 16),
-                const CircularProgressIndicator(),
-              ],
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

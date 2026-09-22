@@ -7,6 +7,8 @@ class Talks extends Table {
   TextColumn get title => text()();
   TextColumn get speaker => text().nullable()();
   DateTimeColumn get date => dateTime()();
+  DateTimeColumn get updatedAt => dateTime().clientDefault(() => DateTime.now())();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -21,6 +23,8 @@ class TalkPoints extends Table {
   TextColumn get pointText => text()();
   TextColumn get linkedStudyEntryId =>
       text().nullable().references(StudyEntries, #id)();
+  DateTimeColumn get updatedAt => dateTime().clientDefault(() => DateTime.now())();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
